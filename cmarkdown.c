@@ -22,29 +22,35 @@ struct Tag {
 
 void eprint(const char *format, ...);			/* Prints error and exits */
 void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
-void process(const char *begin, const char *end);
-							/* Processes range between begin and end with parser (NULL = all parsers) */
-unsigned int doreplace(const char *begin, const char *end);
-							/* Parser for simple replaces */
 unsigned int dolineprefix(const char *begin, const char *end);
 							/* Parser for line prefix tags */
+unsigned int dolink(const char *begin, const char *end);
+							/* Parser for links and images */
+unsigned int doreplace(const char *begin, const char *end);
+							/* Parser for simple replaces */
+unsigned int doshortlink(const char *begin, const char *end);
+							/* Parser for links and images */
 unsigned int dosurround(const char *begin, const char *end);
 							/* Parser for surrounding tags */
 unsigned int dounderline(const char *begin, const char *end);
 							/* Parser for underline tags */
-unsigned int dolink(const char *begin, const char *end);
-							/* Parser for links and images */
-unsigned int doshortlink(const char *begin, const char *end);
-							/* Parser for links and images */
-Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doshortlink, doreplace };
-							/* list of parsers */
+void process(const char *begin, const char *end);	/* Processes range between begin and end. */
 
+Parser parsers[] = { dounderline, dolineprefix, dosurround, dolist,
+	dolink, doshortlink, doreplace };		/* list of parsers */
 FILE *source;
 unsigned int bsize = 0, nohtml = 0;
 struct Tag lineprefix[] = {
 	{ "   ",	0,	"pre" },
 	{ "\t",		0,	"pre" },
 	{ "> ",		1,	"blockquote" },
+	{ "####### ",	1,	"h7" },
+	{ "###### ",	1,	"h6" },
+	{ "##### ",	1,	"h5" },
+	{ "#### ",	1,	"h4" },
+	{ "### ",	1,	"h3" },
+	{ "## ",	1,	"h2" },
+	{ "# ",		1,	"h1" },
 };
 struct Tag underline[] = {
 	{ "=",		1,	"h1" },
@@ -61,6 +67,13 @@ struct Tag surround[] = {
 char * replace[][2] = {
 	{ "\n---\n", "\n<hr />\n" },
 	{ "\n\n", "<br />\n<br />\n" },
+	{ " #######\n", "\n" },
+	{ " ######\n", "\n" },
+	{ " #####\n", "\n" },
+	{ " ####\n", "\n" },
+	{ " ###\n", "\n" },
+	{ " ##\n", "\n" },
+	{ " #\n", "\n" },
 };
 
 void
@@ -84,6 +97,43 @@ hprint(const char *begin, const char *end) {
 		else if(*p == '<')	fputs("&lt;",stdout);
 		else			putchar(*p);
 	}
+}
+
+unsigned int
+dolineprefix(const char *begin, const char *end) {
+	unsigned int i, j, l;
+	char *buffer;
+	const char *p;
+
+	if(*begin != '\n' && *begin != '\0')
+		return 0;
+	for(i = 0; i < LENGTH(lineprefix); i++) {
+		l = strlen(lineprefix[i].search);
+		if(end - begin+1 < l)
+			continue;
+		if(strncmp(lineprefix[i].search,begin+1,l))
+			continue;
+
+		if(!(buffer = malloc(end - begin+1)))
+			ERRMALLOC;
+		printf("<%s>",lineprefix[i].tag);
+		for(p = begin, j = 0; p != end; p++, j++) {
+			buffer[j] = *p;
+			if(*p == '\n') {
+				if(strncmp(lineprefix[i].search,p+1,l) != 0)
+					break;
+				p += l;
+			}
+		}
+		if(lineprefix[i].process)
+			process(buffer,buffer+strlen(buffer));
+		else
+			hprint(buffer,buffer+strlen(buffer));
+		printf("</%s>",lineprefix[i].tag);
+		free(buffer);
+		return p - begin;
+	}
+	return 0;
 }
 
 unsigned int
@@ -122,6 +172,23 @@ dolink(const char *begin, const char *end) {
 	}
 	return p + 1 - begin;
 }
+
+unsigned int
+doreplace(const char *begin, const char *end) {
+	unsigned int i, l;
+
+	for(i = 0; i < LENGTH(replace); i++) {
+		l = strlen(replace[i][0]);
+		if(end - begin < l)
+			continue;
+		if(strncmp(replace[i][0],begin,l) == 0) {
+			fputs(replace[i][1], stdout);
+			return l;
+		}
+	}
+	return 0;
+}
+
 unsigned int
 doshortlink(const char *begin, const char *end) {
 	const char *p, *c;
@@ -187,58 +254,6 @@ dosurround(const char *begin, const char *end) {
 			hprint(begin + strlen(surround[i].search), p);
 		printf("</%s>",surround[i].tag);
 		return p - begin + l;
-	}
-	return 0;
-}
-unsigned int
-doreplace(const char *begin, const char *end) {
-	unsigned int i, l;
-
-	for(i = 0; i < LENGTH(replace); i++) {
-		l = strlen(replace[i][0]);
-		if(end - begin < l)
-			continue;
-		if(strncmp(replace[i][0],begin,l) == 0) {
-			fputs(replace[i][1], stdout);
-			return l;
-		}
-	}
-	return 0;
-}
-
-unsigned int
-dolineprefix(const char *begin, const char *end) {
-	unsigned int i, j, l;
-	char *buffer;
-	const char *p;
-
-	if(*begin != '\n' && *begin != '\0')
-		return 0;
-	for(i = 0; i < LENGTH(lineprefix); i++) {
-		l = strlen(lineprefix[i].search);
-		if(end - begin+1 < l)
-			continue;
-		if(strncmp(lineprefix[i].search,begin+1,l))
-			continue;
-
-		if(!(buffer = malloc(end - begin+1)))
-			ERRMALLOC;
-		printf("<%s>",lineprefix[i].tag);
-		for(p = begin, j = 0; p != end; p++, j++) {
-			buffer[j] = *p;
-			if(*p == '\n') {
-				if(strncmp(lineprefix[i].search,p+1,l) != 0)
-					break;
-				p += l;
-			}
-		}
-		if(lineprefix[i].process)
-			process(buffer,buffer+strlen(buffer));
-		else
-			hprint(buffer,buffer+strlen(buffer));
-		printf("</%s>",lineprefix[i].tag);
-		free(buffer);
-		return p - begin;
 	}
 	return 0;
 }
