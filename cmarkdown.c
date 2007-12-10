@@ -38,7 +38,7 @@ unsigned int dounderline(const char *begin, const char *end);
 							/* Parser for underline tags */
 void process(const char *begin, const char *end);	/* Processes range between begin and end. */
 
-Parser parsers[] = { dounderline, dolineprefix, dosurround, dolist,
+Parser parsers[] = { dounderline, dolineprefix, dolist, dosurround,
 	dolink, doshortlink, doreplace };		/* list of parsers */
 FILE *source;
 unsigned int bsize = 0, nohtml = 0;
@@ -67,15 +67,17 @@ struct Tag surround[] = {
 	{ "_",		1,	"em" },
 };
 char * replace[][2] = {
-	{ "\n---\n", "\n<hr />\n" },
-	{ "\n\n", "<br />\n<br />\n" },
-	{ " #######\n", "\n" },
-	{ " ######\n", "\n" },
-	{ " #####\n", "\n" },
-	{ " ####\n", "\n" },
-	{ " ###\n", "\n" },
-	{ " ##\n", "\n" },
-	{ " #\n", "\n" },
+	{ "\n---\n",	"\n<hr />\n" },
+	{ " #######\n",	"\n" },
+	{ " ######\n",	"\n" },
+	{ " #####\n",	"\n" },
+	{ " ####\n",	"\n" },
+	{ " ###\n",	"\n" },
+	{ " ##\n",	"\n" },
+	{ " #\n",	"\n" },
+};
+char * insert[][2] = {
+	{ "\n\n",	"<br /><br />" },
 };
 
 void
@@ -115,7 +117,6 @@ dolineprefix(const char *begin, const char *end) {
 			continue;
 		if(strncmp(lineprefix[i].search,begin+1,l))
 			continue;
-
 		if(!(buffer = malloc(end - begin+1)))
 			ERRMALLOC;
 		printf("<%s>",lineprefix[i].tag);
@@ -181,11 +182,12 @@ dolist(const char *begin, const char *end) {
 	const char *p;
 	char *buffer;
 
-	if(*begin != '\n' || !p[1])
+	if(*begin != '\n' || !begin[1] || !begin[2])
 		return 0;
-	if(strchr("+-*",p[1])) {
-		p++;
+	p = begin;
+	if(strchr("+-*",p[1]) && p[2] == ' ') {
 		ul = 1;
+		p++;
 	}
 	else {
 		for(p = begin + 1; *p && p != end && *p <= '0' && *p >= '9';p++);
@@ -225,7 +227,7 @@ dolist(const char *begin, const char *end) {
 		process(buffer,buffer+i);
 		fputs("</li>\n",stdout);
 	}
-	puts(ul ? "<ul>" : "<ol>");
+	puts(ul ? "</ul>" : "</ol>");
 	free(buffer);
 	return p - begin;
 }
@@ -234,6 +236,9 @@ unsigned int
 doreplace(const char *begin, const char *end) {
 	unsigned int i, l;
 
+	for(i = 0; i < LENGTH(insert); i++)
+		if(strncmp(insert[i][0],begin,strlen(insert[i][0])) == 0)
+			fputs(insert[i][1], stdout);
 	for(i = 0; i < LENGTH(replace); i++) {
 		l = strlen(replace[i][0]);
 		if(end - begin < l)
