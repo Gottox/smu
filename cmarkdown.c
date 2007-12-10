@@ -54,7 +54,7 @@ Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doreplace };
 							/* list of parsers */
 
 FILE *source;
-unsigned int bsize = 0;
+unsigned int bsize = 0, nohtml = 0;
 struct Tag lineprefix[] = {
 	{ "   ",	0,	"pre" },
 	{ "\t",		0,	"pre" },
@@ -255,7 +255,10 @@ process(const char *begin, const char *end) {
 		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
 			affected = parsers[i](p, end);
 		if(affected == 0) {
-			hprint(p,p+1);
+			if(nohtml)
+				hprint(p,p+1);
+			else
+				putchar(*p);
 			p++;
 		}
 		else
@@ -272,9 +275,12 @@ main(int argc, char *argv[]) {
 	if(argc > 1 && strcmp("-v", argv[1]) == 0)
 		eprint("markdown in C "VERSION" (C) Enno Boland\n");
 	else if(argc > 1 && strcmp("-h", argv[1]) == 0)
-		eprint("Usage %s [file]\n",argv[0]);
-	else if (argc > 1 && strcmp("-", argv[1]) != 0 && !(source = fopen(argv[1],"r")))
-		eprint("Cannot open file `%s`\n",argv[1]);
+		eprint("Usage %s [-n] [file]\n -n escape html strictly\n",argv[0]);
+
+	if(argc > 1 && strcmp("-n", argv[1]) == 0)
+		nohtml = 1;
+	if(argc > 1 + nohtml && strcmp("-", argv[1 + nohtml]) != 0 && !(source = fopen(argv[1 + nohtml],"r")))
+		eprint("Cannot open file `%s`\n",argv[1 + nohtml]);
 	if(!(buffer = malloc(BUFFERSIZE)))
 		ERRMALLOC;
 	bsize = BUFFERSIZE;
