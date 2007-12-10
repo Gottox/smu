@@ -1,23 +1,7 @@
 /* cmarkdown
- * Copyright (C) <2007> Enno boland <g@s01.de>
+ * Copyright (C) <2007> Enno boland <g s01 de>
  *
- * cmarkdown free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- *
- * To compile type
- * gcc -DVERSION=\"`date +%F`\" -o cmarkdown cmarkdown.c
+ * See LICENSE for further informations
  */
 
 #include <stdlib.h>
@@ -315,7 +299,7 @@ main(int argc, char *argv[]) {
 
 	source = stdin;
 	if(argc > 1 && strcmp("-v", argv[1]) == 0)
-		eprint("markdown in C "VERSION" (C) Enno Boland\n");
+		eprint("markdown in C %s (C) Enno Boland\n",VERSION);
 	else if(argc > 1 && strcmp("-h", argv[1]) == 0)
 		eprint("Usage %s [-n] [file]\n -n escape html strictly\n",argv[0]);
 
