@@ -11,7 +11,7 @@ LIBS = -L/usr/lib
 
 # flags
 CFLAGS = -Os ${INCS} -DVERSION=\"${VERSION}\"
-LDFLAGS = -s ${LIBS}
+LDFLAGS = ${LIBS}
 
 # compiler
 CC = cc

@@ -200,10 +200,7 @@ dolist(const char *begin, const char *end) {
 	if(!(buffer = malloc(end - begin+1)))
 		ERRMALLOC;
 
-	if(ul)
-		puts("<ul>");
-	else
-		puts("<ol>");
+	puts(ul ? "<ul>" : "<ol>");
 	run = 1;
 	for(i = 0, p = begin+1+indent; *p && p != end && run; p++) {
 		buffer[0] = '\0';
@@ -228,10 +225,7 @@ dolist(const char *begin, const char *end) {
 		process(buffer,buffer+i);
 		fputs("</li>\n",stdout);
 	}
-	if(ul)
-		puts("</ul>");
-	else
-		puts("</ol>");
+	puts(ul ? "<ul>" : "<ol>");
 	free(buffer);
 	return p - begin;
 }
@@ -259,7 +253,7 @@ doshortlink(const char *begin, const char *end) {
 
 	if(*begin != '<')
 		return 0;
-	for(p = begin+1; p && p != end && !strstr(" \t\n",p); p++) {
+	for(p = begin+1; p && p != end && !strchr(" \t\n",*p); p++) {
 		switch(*p) {
 		case ':':
 			ismail = -1;
@@ -269,6 +263,8 @@ doshortlink(const char *begin, const char *end) {
 				ismail = 1;
 			break;
 		case '>':
+			if(ismail == 0)
+				return 0;
 			fputs("<a href=\"",stdout);
 			if(ismail == 1) {
 				/* mailto: */
@@ -282,9 +278,9 @@ doshortlink(const char *begin, const char *end) {
 				}
 			}
 			else {
-				hprint(begin+1,p-1);
+				hprint(begin+1,p);
 				fputs("\">",stdout);
-				hprint(begin+1,p-1);
+				hprint(begin+1,p);
 			}
 			fputs("</a>",stdout);
 			return p - begin + 1;
@@ -380,7 +376,6 @@ main(int argc, char *argv[]) {
 		eprint("markdown in C %s (C) Enno Boland\n",VERSION);
 	else if(argc > 1 && strcmp("-h", argv[1]) == 0)
 		eprint("Usage %s [-n] [file]\n -n escape html strictly\n",argv[0]);
-
 	if(argc > 1 && strcmp("-n", argv[1]) == 0)
 		nohtml = 1;
 	if(argc > 1 + nohtml && strcmp("-", argv[1 + nohtml]) != 0 && !(source = fopen(argv[1 + nohtml],"r")))
