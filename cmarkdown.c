@@ -177,7 +177,63 @@ dolink(const char *begin, const char *end) {
 
 unsigned int
 dolist(const char *begin, const char *end) {
-	return 0;
+	unsigned int i,j,k,indent,run,ul;
+	const char *p;
+	char *buffer;
+
+	if(*begin != '\n' || !p[1])
+		return 0;
+	if(strchr("+-*",p[1])) {
+		p++;
+		ul = 1;
+	}
+	else {
+		for(p = begin + 1; *p && p != end && *p <= '0' && *p >= '9';p++);
+		p++;
+		if(!*p || p[0] != '.' || p[1] != ' ')
+			return 0;
+		ul = 0;
+	}
+	for(p++; *p && p != end && *p == ' '; p++);
+	indent = p - begin - 1;
+
+	if(!(buffer = malloc(end - begin+1)))
+		ERRMALLOC;
+
+	if(ul)
+		puts("<ul>");
+	else
+		puts("<ol>");
+	run = 1;
+	for(i = 0, p = begin+1+indent; *p && p != end && run; p++) {
+		buffer[0] = '\0';
+		for(i = 0; *p && p != end && run; p++,i++) {
+			if(*p == '\n') {
+				if(p[1] == '\n') {
+					run = 0;
+					break;
+				}
+				else if(p[1] == ' ') {
+					p += indent + 1;
+				}
+				else if(p[1] >= '0' && p[1] <= '9' || strchr("+-*",p[1])) {
+					p += indent;
+					break;
+				}
+				buffer[i++] = '\n';
+			}
+			buffer[i] = *p;
+		}
+		fputs("<li>",stdout);
+		process(buffer,buffer+i);
+		fputs("</li>\n",stdout);
+	}
+	if(ul)
+		puts("</ul>");
+	else
+		puts("</ol>");
+	free(buffer);
+	return p - begin;
 }
 
 unsigned int
