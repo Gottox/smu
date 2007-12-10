@@ -1,4 +1,4 @@
-# cmarkup
+# cmarkdown
 # (c) 2007 Enno Boland
 
 include config.mk
