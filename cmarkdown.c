@@ -50,7 +50,9 @@ unsigned int dounderline(const char *begin, const char *end);
 							/* Parser for underline tags */
 unsigned int dolink(const char *begin, const char *end);
 							/* Parser for links and images */
-Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doreplace };
+unsigned int doshortlink(const char *begin, const char *end);
+							/* Parser for links and images */
+Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doshortlink, doreplace };
 							/* list of parsers */
 
 FILE *source;
@@ -136,6 +138,46 @@ dolink(const char *begin, const char *end) {
 	}
 	return p + 1 - begin;
 }
+unsigned int
+doshortlink(const char *begin, const char *end) {
+	const char *p, *c;
+	int ismail = 0;
+
+	if(*begin != '<')
+		return 0;
+	for(p = begin+1; p && p != end && !strstr(" \t\n",p); p++) {
+		switch(*p) {
+		case ':':
+			ismail = -1;
+			break;
+		case '@':
+			if(ismail == 0)
+				ismail = 1;
+			break;
+		case '>':
+			fputs("<a href=\"",stdout);
+			if(ismail == 1) {
+				/* mailto: */
+				fputs("&#x6D;&#x61;i&#x6C;&#x74;&#x6F;:",stdout);
+				for(c = begin+1; *c != '>'; c++) {
+					printf("&#%u;",*c);
+				}
+				fputs("\">",stdout);
+				for(c = begin+1; *c != '>'; c++) {
+					printf("&#%u;",*c);
+				}
+			}
+			else {
+				hprint(begin+1,p-1);
+				fputs("\">",stdout);
+				hprint(begin+1,p-1);
+			}
+			fputs("</a>",stdout);
+			return p - begin + 1;
+		}
+	}
+	return 0;
+}
 
 unsigned int
 dosurround(const char *begin, const char *end) {
@@ -197,7 +239,7 @@ dolineprefix(const char *begin, const char *end) {
 
 		if(!(buffer = malloc(end - begin+1)))
 			ERRMALLOC;
-		printf("<%s>",surround[i].tag);
+		printf("<%s>",lineprefix[i].tag);
 		for(p = begin, j = 0; p != end; p++, j++) {
 			buffer[j] = *p;
 			if(*p == '\n') {
@@ -210,7 +252,7 @@ dolineprefix(const char *begin, const char *end) {
 			process(buffer,buffer+strlen(buffer));
 		else
 			hprint(buffer,buffer+strlen(buffer));
-		printf("</%s>",surround[i].tag);
+		printf("</%s>",lineprefix[i].tag);
 		free(buffer);
 		return p - begin;
 	}
