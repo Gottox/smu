@@ -1,55 +1,84 @@
+/* cmarkdown
+ * Copyright (C) <2007> Enno boland <g@s01.de>
+ *
+ * cmarkdown free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ *
+ * To compile type
+ * gcc -DVERSION=\"`date +%F`\" -o cmarkdown cmarkdown.c
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 
-struct Tag {
-	char *search;
-	int hasChilds;
-	char *prefix, *suffix;
-};
-typedef unsigned int (*Parser)(const char *, const char *);
-
 #define BUFFERSIZE 1024
 #define ERRMALLOC eprint("malloc failed\n");
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
 
+typedef unsigned int (*Parser)(const char *, const char *);
+struct Tag {
+	char *search;
+	int process;
+	char *tag;
+};
+
+void eprint(const char *errstr, ...);			/* Prints error and exits */
+void process(const char *begin, const char *end);
+							/* Processes range between begin and end with parser (NULL = all parsers) */
+unsigned int doreplace(const char *begin, const char *end);
+							/* Parser for simple replaces */
+unsigned int dolineprefix(const char *begin, const char *end);
+							/* Parser for line prefix tags */
+unsigned int dosurround(const char *begin, const char *end);
+							/* Parser for surrounding tags */
+unsigned int dounderline(const char *begin, const char *end);
+							/* Parser for underline tags */
+unsigned int dolink(const char *begin, const char *end);
+							/* Parser for links and images */
+Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doreplace };
+							/* list of parsers */
+
 FILE *source;
 unsigned int bsize = 0;
 struct Tag lineprefix[] = {
-	{ "   ",	0,	"<pre>",	"</pre>" },
-	{ "\t",		0,	"<pre>",	"</pre>" },
-	{ "> ",		1,	"<blockquote>",	"</blockquote>" },
+	{ "   ",	0,		"pre" },
+	{ "\t",		0,		"pre" },
+	{ "> ",		1,		"blockquote" },
 };
-
 struct Tag underline[] = {
-	{ "=",		1,	"<h1>",		"</h1>" },
-	{ "-",		1,	"<h2>",		"</h2>" },
+	{ "=",		1,	"h1" },
+	{ "-",		1,	"h2" },
 };
-
 struct Tag surround[] = {
-	{ "_",		1,	"<b>",		"</b>" },
-	{ "*",		1,	"<i>",		"</i>" },
+	{ "``",		0,	"code" },
+	{ "`",		0,	"code" },
+	{ "__",		1,	"strong" },
+	{ "**",		1,	"strong" },
+	{ "*",		1,	"em" },
+	{ "_",		1,	"em" },
 };
-
 char * replace[][2] = {
 	{ "\n---\n", "\n<hr />\n" },
-	{ "\n\n", "\n<br />\n" },
+	{ "\n\n", "<br />\n<br />\n" },
 	{ "<", "&lt;" },
 	{ ">", "&gt;" },
 	{ "&", "&amp;" },
 	{ "\"", "&quot;" },
 };
-
-
-void eprint(const char *errstr, ...);
-void process(const char *begin, const char *end, Parser parser);
-unsigned int doreplace(const char *begin, const char *end);
-unsigned int dolineprefix(const char *begin, const char *end);
-unsigned int dosurround(const char *begin, const char *end);
-unsigned int dounderline(const char *begin, const char *end);
-unsigned int dolink(const char *begin, const char *end);
-Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doreplace };
 
 void
 eprint(const char *errstr, ...) {
@@ -83,16 +112,16 @@ dolink(const char *begin, const char *end) {
 
 	if(img) {
 		fputs("<img src=\"",stdout);
-		process(link,link+linklen, doreplace);
+		process(link,link+linklen);
 		fputs("\" alt=\"",stdout);
-		process(desc,desc+desclen, NULL);
+		process(desc,desc+desclen);
 		fputs("\" />",stdout);
 	}
 	else {
 		fputs("<a href=\"",stdout);
-		process(link,link+linklen, doreplace);
+		process(link,link+linklen);
 		fputs("\">",stdout);
-		process(desc,desc+desclen, NULL);
+		process(desc,desc+desclen);
 		fputs("</a>",stdout);
 	}
 	return p + 1 - begin;
@@ -109,12 +138,18 @@ dosurround(const char *begin, const char *end) {
 			continue;
 		for(ps = surround[i].search; *ps == '\n'; ps++);
 		l = strlen(ps);
-		p = strstr(begin + strlen(surround[i].search), ps);
+		p = begin + strlen(surround[i].search) - 1;
+		do {
+			p = strstr(p+1, ps);
+		} while(p && p[-1] == '\\');
 		if(!p || p > end)
 			continue;
-		fputs(surround[i].prefix,stdout);
-		fwrite(begin + strlen(surround[i].search), sizeof(char), p - begin - l, stdout);
-		fputs(surround[i].suffix,stdout);
+		printf("<%s>",surround[i].tag);
+		if(surround[i].process)
+			process(begin + strlen(surround[i].search), p);
+		else
+			fwrite(begin + strlen(surround[i].search), p - begin - l, sizeof(char), stdout);
+		printf("</%s>",surround[i].tag);
 		return p - begin + l;
 	}
 	return 0;
@@ -152,7 +187,7 @@ dolineprefix(const char *begin, const char *end) {
 
 		if(!(buffer = malloc(end - begin+1)))
 			ERRMALLOC;
-		fputs(lineprefix[i].prefix, stdout);
+		printf("<%s>",surround[i].tag);
 		for(p = begin, j = 0; p != end; p++, j++) {
 			buffer[j] = *p;
 			if(*p == '\n') {
@@ -161,11 +196,11 @@ dolineprefix(const char *begin, const char *end) {
 				p += l;
 			}
 		}
-		if(lineprefix[i].hasChilds)
-			process(buffer,buffer+strlen(buffer), NULL);
+		if(lineprefix[i].process)
+			process(buffer,buffer+strlen(buffer));
 		else
-			fputs(buffer, stdout);
-		fputs(lineprefix[i].suffix, stdout);
+			fwrite(buffer,strlen(buffer), sizeof(char),stdout);
+		printf("</%s>",surround[i].tag);
 		free(buffer);
 		return p - begin;
 	}
@@ -180,39 +215,35 @@ dounderline(const char *begin, const char *end) {
 	if(*begin != '\n' && *begin != '\0')
 		return 0;
 	for(p = begin+1,l = 0; p[l] != '\n' && p[l] && p+l != end; l++);
-	p += l+1;
+	p += l + 1;
 	if(l == 0)
 		return 0;
 	for(i = 0; i < LENGTH(underline); i++) {
 		for(j = 0; p[j] != '\n' && p[j] == underline[i].search[0] && p+j != end; j++);
 		if(j >= l) {
 			putchar('\n');
-			fputs(underline[i].prefix,stdout);
-			if(underline[i].hasChilds)
-				process(begin + 1, begin + l + 1, NULL);
+			printf("<%s>",underline[i].tag);
+			if(underline[i].process)
+				process(begin+1, begin + l + 1);
 			else
-				fwrite(begin + 1, l, sizeof(char), stdout);
-			fputs(underline[i].suffix,stdout);
+				fwrite(begin+1,l,sizeof(char),stdout);
+			printf("</%s>",underline[i].tag);
 			return j + l + 2;
 		}
 	}
 	return 0;
 }
 
-
 void
-process(const char *begin, const char *end, Parser parser) {
+process(const char *begin, const char *end) {
 	const char *p;
 	int affected;
 	unsigned int i;
 	
 	for(p = begin; *p && p != end;) {
 		affected = 0;
-		if(parser)
-			affected = parser(p, end);
-		else
-			for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
-				affected = parsers[i](p, end);
+		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
+			affected = parsers[i](p, end);
 		if(affected == 0) {
 			putchar(*p);
 			p++;
@@ -231,12 +262,13 @@ main(int argc, char *argv[]) {
 	if(argc > 1 && strcmp("-v", argv[1]) == 0)
 		eprint("markdown in C "VERSION" (C) Enno Boland\n");
 	else if(argc > 1 && strcmp("-h", argv[1]) == 0)
-		eprint("Usage markdown [file]\n");
+		eprint("Usage %s [file]\n",argv[0]);
 	else if (argc > 1 && strcmp("-", argv[1]) != 0 && !(source = fopen(argv[1],"r")))
 		eprint("Cannot open file `%s`\n",argv[1]);
 	if(!(buffer = malloc(BUFFERSIZE)))
 		ERRMALLOC;
 	bsize = BUFFERSIZE;
+	/* needed to properly process first line */
 	strcpy(buffer,"\n");
 
 	p = buffer+strlen(buffer);
@@ -250,6 +282,6 @@ main(int argc, char *argv[]) {
 		}
 	}
 	
-	process(buffer,buffer+strlen(buffer), NULL);
+	process(buffer,buffer+strlen(buffer));
 	free(buffer);
 }
