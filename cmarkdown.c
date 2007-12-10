@@ -36,7 +36,8 @@ struct Tag {
 	char *tag;
 };
 
-void eprint(const char *errstr, ...);			/* Prints error and exits */
+void eprint(const char *format, ...);			/* Prints error and exits */
+void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
 void process(const char *begin, const char *end);
 							/* Processes range between begin and end with parser (NULL = all parsers) */
 unsigned int doreplace(const char *begin, const char *end);
@@ -55,9 +56,9 @@ Parser parsers[] = { dounderline, dolineprefix, dosurround, dolink, doreplace };
 FILE *source;
 unsigned int bsize = 0;
 struct Tag lineprefix[] = {
-	{ "   ",	0,		"pre" },
-	{ "\t",		0,		"pre" },
-	{ "> ",		1,		"blockquote" },
+	{ "   ",	0,	"pre" },
+	{ "\t",		0,	"pre" },
+	{ "> ",		1,	"blockquote" },
 };
 struct Tag underline[] = {
 	{ "=",		1,	"h1" },
@@ -74,20 +75,29 @@ struct Tag surround[] = {
 char * replace[][2] = {
 	{ "\n---\n", "\n<hr />\n" },
 	{ "\n\n", "<br />\n<br />\n" },
-	{ "<", "&lt;" },
-	{ ">", "&gt;" },
-	{ "&", "&amp;" },
-	{ "\"", "&quot;" },
 };
 
 void
-eprint(const char *errstr, ...) {
+eprint(const char *format, ...) {
 	va_list ap;
 
-	va_start(ap, errstr);
-	vfprintf(stderr, errstr, ap);
+	va_start(ap, format);
+	vfprintf(stderr, format, ap);
 	va_end(ap);
 	exit(EXIT_FAILURE);
+}
+
+void
+hprint(const char *begin, const char *end) {
+	const char *p;
+
+	for(p = begin; p && p != end; p++) {
+		if(*p == '&')		fputs("&amp;",stdout);
+		else if(*p == '"')	fputs("&quot;",stdout);
+		else if(*p == '>')	fputs("&gt;",stdout);
+		else if(*p == '<')	fputs("&lt;",stdout);
+		else			putchar(*p);
+	}
 }
 
 unsigned int
@@ -148,7 +158,7 @@ dosurround(const char *begin, const char *end) {
 		if(surround[i].process)
 			process(begin + strlen(surround[i].search), p);
 		else
-			fwrite(begin + strlen(surround[i].search), p - begin - l, sizeof(char), stdout);
+			hprint(begin + strlen(surround[i].search), p);
 		printf("</%s>",surround[i].tag);
 		return p - begin + l;
 	}
@@ -199,7 +209,7 @@ dolineprefix(const char *begin, const char *end) {
 		if(lineprefix[i].process)
 			process(buffer,buffer+strlen(buffer));
 		else
-			fwrite(buffer,strlen(buffer), sizeof(char),stdout);
+			hprint(buffer,buffer+strlen(buffer));
 		printf("</%s>",surround[i].tag);
 		free(buffer);
 		return p - begin;
@@ -226,7 +236,7 @@ dounderline(const char *begin, const char *end) {
 			if(underline[i].process)
 				process(begin+1, begin + l + 1);
 			else
-				fwrite(begin+1,l,sizeof(char),stdout);
+				hprint(begin+1, begin + l + 1);
 			printf("</%s>",underline[i].tag);
 			return j + l + 2;
 		}
@@ -245,7 +255,7 @@ process(const char *begin, const char *end) {
 		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
 			affected = parsers[i](p, end);
 		if(affected == 0) {
-			putchar(*p);
+			hprint(p,p+1);
 			p++;
 		}
 		else
