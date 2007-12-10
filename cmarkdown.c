@@ -26,6 +26,8 @@ unsigned int dolineprefix(const char *begin, const char *end);
 							/* Parser for line prefix tags */
 unsigned int dolink(const char *begin, const char *end);
 							/* Parser for links and images */
+unsigned int dolist(const char *begin, const char *end);
+							/* Parser for lists */
 unsigned int doreplace(const char *begin, const char *end);
 							/* Parser for simple replaces */
 unsigned int doshortlink(const char *begin, const char *end);
@@ -171,6 +173,11 @@ dolink(const char *begin, const char *end) {
 		fputs("</a>",stdout);
 	}
 	return p + 1 - begin;
+}
+
+unsigned int
+dolist(const char *begin, const char *end) {
+	return 0;
 }
 
 unsigned int
