@@ -10,7 +10,6 @@
 #include <string.h>
 
 #define BUFFERSIZE 1024
-#define ERRMALLOC eprint("malloc failed\n");
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
 
 typedef unsigned int (*Parser)(const char *, const char *);
@@ -28,6 +27,8 @@ unsigned int dolink(const char *begin, const char *end);
 							/* Parser for links and images */
 unsigned int dolist(const char *begin, const char *end);
 							/* Parser for lists */
+unsigned int doparagraph(const char *begin, const char *end);
+							/* Parser for paragraphs */
 unsigned int doreplace(const char *begin, const char *end);
 							/* Parser for simple replaces */
 unsigned int doshortlink(const char *begin, const char *end);
@@ -38,8 +39,8 @@ unsigned int dounderline(const char *begin, const char *end);
 							/* Parser for underline tags */
 void process(const char *begin, const char *end);	/* Processes range between begin and end. */
 
-Parser parsers[] = { dounderline, dolineprefix, dolist, dosurround,
-	dolink, doshortlink, doreplace };		/* list of parsers */
+Parser parsers[] = { dounderline, dolineprefix, dolist, doparagraph,
+	dosurround, dolink, doshortlink, doreplace };	/* list of parsers */
 FILE *source;
 unsigned int bsize = 0, nohtml = 0;
 struct Tag lineprefix[] = {
@@ -67,7 +68,8 @@ struct Tag surround[] = {
 	{ "_",		1,	"em" },
 };
 char * replace[][2] = {
-	{ "\n---\n",	"\n<hr />\n" },
+	{ "\n- - -\n",	"\n<hr />\n" },
+	{ "\n- - - \n",	"\n<hr />\n" },
 	{ " #######\n",	"\n" },
 	{ " ######\n",	"\n" },
 	{ " #####\n",	"\n" },
@@ -77,7 +79,7 @@ char * replace[][2] = {
 	{ " #\n",	"\n" },
 };
 char * insert[][2] = {
-	{ "\n\n",	"<br /><br />" },
+	{ "  \n",	"<br />" },
 };
 
 void
@@ -109,7 +111,7 @@ dolineprefix(const char *begin, const char *end) {
 	char *buffer;
 	const char *p;
 
-	if(*begin != '\n' && *begin != '\0')
+	if(*begin != '\n')
 		return 0;
 	for(i = 0; i < LENGTH(lineprefix); i++) {
 		l = strlen(lineprefix[i].search);
@@ -118,7 +120,7 @@ dolineprefix(const char *begin, const char *end) {
 		if(strncmp(lineprefix[i].search,begin+1,l))
 			continue;
 		if(!(buffer = malloc(end - begin+1)))
-			ERRMALLOC;
+			eprint("Malloc failed.");
 		printf("<%s>",lineprefix[i].tag);
 		for(p = begin, j = 0; p != end; p++, j++) {
 			buffer[j] = *p;
@@ -202,7 +204,7 @@ dolist(const char *begin, const char *end) {
 	indent = p - begin - 1;
 
 	if(!(buffer = malloc(end - begin+1)))
-		ERRMALLOC;
+		eprint("Malloc failed.");
 
 	puts(ul ? "<ul>" : "<ol>");
 	run = 1;
@@ -231,6 +233,24 @@ dolist(const char *begin, const char *end) {
 	}
 	puts(ul ? "</ul>" : "</ol>");
 	free(buffer);
+	return p - begin;
+}
+
+unsigned int
+doparagraph(const char *begin, const char *end) {
+	const char *p;
+
+	if(strncmp(begin,"\n\n",2))
+		return 0;
+	if(!(p = strstr(begin+2,"\n\n")))
+		p = end;
+	if(p > end)
+		return 0;
+	if(p - begin - 2 <= 0) 
+		return 0;
+	fputs("\n<p>",stdout);
+	process(begin+2,p);
+	fputs("</p>\n",stdout);
 	return p - begin;
 }
 
@@ -344,7 +364,7 @@ dounderline(const char *begin, const char *end) {
 				process(begin+1, begin + l + 1);
 			else
 				hprint(begin+1, begin + l + 1);
-			printf("</%s>",underline[i].tag);
+			printf("</%s>\n",underline[i].tag);
 			return j + l + 2;
 		}
 	}
@@ -388,7 +408,7 @@ main(int argc, char *argv[]) {
 	if(argc > 1 + nohtml && strcmp("-", argv[1 + nohtml]) != 0 && !(source = fopen(argv[1 + nohtml],"r")))
 		eprint("Cannot open file `%s`\n",argv[1 + nohtml]);
 	if(!(buffer = malloc(BUFFERSIZE)))
-		ERRMALLOC;
+		eprint("Malloc failed.");
 	bsize = BUFFERSIZE;
 	/* needed to properly process first line */
 	strcpy(buffer,"\n");
@@ -400,7 +420,7 @@ main(int argc, char *argv[]) {
 		if(BUFFERSIZE + strlen(buffer) > bsize) {
 			bsize += BUFFERSIZE;
 			if(!(buffer = realloc(buffer, bsize)))
-				ERRMALLOC;
+				eprint("Malloc failed.");
 		}
 	}
 	
