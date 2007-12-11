@@ -21,6 +21,7 @@ struct Tag {
 
 void eprint(const char *format, ...);			/* Prints error and exits */
 void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
+unsigned int doamp(const char *begin, const char *end);	/* Parser for & */
 unsigned int dolineprefix(const char *begin, const char *end);
 							/* Parser for line prefix tags */
 unsigned int dolink(const char *begin, const char *end);
@@ -40,7 +41,7 @@ unsigned int dounderline(const char *begin, const char *end);
 void process(const char *begin, const char *end);	/* Processes range between begin and end. */
 
 Parser parsers[] = { dounderline, dolineprefix, dolist, doparagraph,
-	dosurround, dolink, doshortlink, doreplace };	/* list of parsers */
+	dosurround, dolink, doshortlink, doamp, doreplace };	/* list of parsers */
 FILE *source;
 unsigned int bsize = 0, nohtml = 0;
 struct Tag lineprefix[] = {
@@ -77,6 +78,8 @@ char * replace[][2] = {
 	{ " ###\n",	"\n" },
 	{ " ##\n",	"\n" },
 	{ " #\n",	"\n" },
+	{ " >",		"&gt;" },
+	{ "< ",		"&lt;" },
 };
 char * insert[][2] = {
 	{ "  \n",	"<br />" },
@@ -105,6 +108,20 @@ hprint(const char *begin, const char *end) {
 	}
 }
 
+unsigned int
+doamp(const char *begin, const char *end) {
+	const char *p;
+
+	if(*begin != '&')
+		return 0;
+	if(!nohtml) {
+		for(p = begin + 1; !strchr("; \\\n\t",*p); p++);
+		if(*p == ';')
+			return 0;
+	}
+	fputs("&amp;",stdout);
+	return 1;
+}
 unsigned int
 dolineprefix(const char *begin, const char *end) {
 	unsigned int i, j, l;
@@ -395,15 +412,15 @@ process(const char *begin, const char *end) {
 		affected = 0;
 		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
 			affected = parsers[i](p, end);
-		if(affected == 0) {
+		if(affected)
+			p += affected;
+		else {
 			if(nohtml)
 				hprint(p,p+1);
 			else
 				putchar(*p);
 			p++;
 		}
-		else
-			p += affected;
 	}
 }
 
@@ -425,7 +442,7 @@ main(int argc, char *argv[]) {
 		eprint("Malloc failed.");
 	bsize = BUFFERSIZE;
 	/* needed to properly process first line */
-	strcpy(buffer,"\n");
+	strcpy(buffer,"\n\n");
 
 	p = buffer+strlen(buffer);
 	while(s = fread(p, sizeof(char),BUFFERSIZE, source)) {
