@@ -113,16 +113,19 @@ dolineprefix(const char *begin, const char *end) {
 
 	if(*begin != '\n')
 		return 0;
+	p = begin;
+	if(p[1] == '\n')
+		p++;
 	for(i = 0; i < LENGTH(lineprefix); i++) {
 		l = strlen(lineprefix[i].search);
-		if(end - begin+1 < l)
+		if(end - p+1 < l)
 			continue;
-		if(strncmp(lineprefix[i].search,begin+1,l))
+		if(strncmp(lineprefix[i].search,p+1,l))
 			continue;
-		if(!(buffer = malloc(end - begin+1)))
+		if(!(buffer = malloc(end - p+1)))
 			eprint("Malloc failed.");
-		printf("<%s>",lineprefix[i].tag);
-		for(p = begin, j = 0; p != end; p++, j++) {
+		printf("\n<%s>",lineprefix[i].tag);
+		for(j = 0; p != end; p++, j++) {
 			buffer[j] = *p;
 			if(*p == '\n') {
 				if(strncmp(lineprefix[i].search,p+1,l) != 0)
@@ -134,7 +137,7 @@ dolineprefix(const char *begin, const char *end) {
 			process(buffer,buffer+strlen(buffer));
 		else
 			hprint(buffer,buffer+strlen(buffer));
-		printf("</%s>",lineprefix[i].tag);
+		printf("</%s>\n",lineprefix[i].tag);
 		free(buffer);
 		return p - begin;
 	}
@@ -212,7 +215,7 @@ dolist(const char *begin, const char *end) {
 		buffer[0] = '\0';
 		for(i = 0; *p && p != end && run; p++,i++) {
 			if(*p == '\n') {
-				if(p[1] == '\n') {
+				if(p[1] == '\n' && p[2] == '\n') {
 					run = 0;
 					break;
 				}
