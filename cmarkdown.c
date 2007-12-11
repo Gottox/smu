@@ -142,35 +142,37 @@ dolineprefix(const char *begin, const char *end) {
 unsigned int
 dolink(const char *begin, const char *end) {
 	int img;
-	const char *desc, *link, *p;
-	unsigned int desclen, linklen;
+	const char *desc, *link, *p, *q, *r, *descend, *linkend;
 
-	if(*begin != '[' && strncmp(begin,"![",2) != 0)
-		return 0;
-	img = 1;
 	if(*begin == '[')
 		img = 0;
-	desc = begin + 1 + img;
+	else if(strncmp(begin,"![",2) == 0)
+		img = 1;
+	else
+		return 0;
+	p = desc = begin + 1 + img;
 	if(!(p = strstr(desc, "](")) || p > end)
 		return 0;
-	desclen = p - desc;
+	for(q = strstr(desc, "!["); q && q < end && q < p; q = strstr(q+1,"!["))
+		if(!(p = strstr(p+1, "](")) || p > end)
+			return 0;
+	descend = p;
 	link = p + 2;
 	if(!(p = strstr(link, ")")) || p > end)
 		return 0;
-	linklen = p - link;
-
+	linkend = p;
 	if(img) {
 		fputs("<img src=\"",stdout);
-		process(link,link+linklen);
+		process(link,linkend);
 		fputs("\" alt=\"",stdout);
-		process(desc,desc+desclen);
+		process(desc,descend);
 		fputs("\" />",stdout);
 	}
 	else {
 		fputs("<a href=\"",stdout);
-		process(link,link+linklen);
+		process(link,linkend);
 		fputs("\">",stdout);
-		process(desc,desc+desclen);
+		process(desc,descend);
 		fputs("</a>",stdout);
 	}
 	return p + 1 - begin;
