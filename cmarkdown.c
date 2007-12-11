@@ -376,12 +376,18 @@ dosurround(const char *begin, const char *end) {
 
 unsigned int
 dounderline(const char *begin, const char *end) {
-	unsigned int i, j, l;
+	unsigned int i, j, l, nl;
 	const char *p;
 
 	if(*begin != '\n' && *begin != '\0')
 		return 0;
-	for(p = begin+1,l = 0; p[l] != '\n' && p[l] && p+l != end; l++);
+	nl = 0;
+	p = begin;
+	if(p[1] == '\n') {
+		nl = 1;
+		p++;
+	}
+	for(p++,l = 0; p[l] != '\n' && p[l] && p+l != end; l++);
 	p += l + 1;
 	if(l == 0)
 		return 0;
@@ -391,11 +397,11 @@ dounderline(const char *begin, const char *end) {
 			putchar('\n');
 			printf("<%s>",underline[i].tag);
 			if(underline[i].process)
-				process(begin+1, begin + l + 1);
+				process(begin + 1 + nl, begin + l + 1 + nl);
 			else
-				hprint(begin+1, begin + l + 1);
+				hprint(begin + 1 + nl, begin + l + 1 + nl);
 			printf("</%s>\n",underline[i].tag);
-			return j + l + 2;
+			return j + p - begin;
 		}
 	}
 	return 0;
@@ -441,7 +447,7 @@ main(int argc, char *argv[]) {
 		eprint("Malloc failed.");
 	bsize = BUFFERSIZE;
 	/* needed to properly process first line */
-	strcpy(buffer,"\n\n");
+	strcpy(buffer,"\n");
 
 	p = buffer+strlen(buffer);
 	while(s = fread(p, sizeof(char),BUFFERSIZE, source)) {
