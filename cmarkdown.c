@@ -186,57 +186,68 @@ dolink(const char *begin, const char *end) {
 unsigned int
 dolist(const char *begin, const char *end) {
 	unsigned int i,j,k,indent,run,ul;
-	const char *p;
+	const char *p, *q;
 	char *buffer;
 
-	if(*begin != '\n' || !begin[1] || !begin[2])
+	if(*begin != '\n')
 		return 0;
 	p = begin;
+	if(p[1] == '\n')
+		p++;
+	q = p;
 	if(strchr("+-*",p[1]) && p[2] == ' ') {
 		ul = 1;
 		p++;
 	}
 	else {
-		for(p = begin + 1; *p && p != end && *p <= '0' && *p >= '9';p++);
+		for(p++; *p && p != end && *p <= '0' && *p >= '9';p++);
 		p++;
 		if(!*p || p[0] != '.' || p[1] != ' ')
 			return 0;
 		ul = 0;
 	}
 	for(p++; *p && p != end && *p == ' '; p++);
-	indent = p - begin - 1;
+	indent = p - q - 1;
 
-	if(!(buffer = malloc(end - begin+1)))
+	if(!(buffer = malloc(end - q+1)))
 		eprint("Malloc failed.");
 
 	puts(ul ? "<ul>" : "<ol>");
 	run = 1;
-	for(i = 0, p = begin+1+indent; *p && p != end && run; p++) {
+	for(i = 0, p = q+1+indent; *p && p < end && run; p++) {
 		buffer[0] = '\0';
-		for(i = 0; *p && p != end && run; p++,i++) {
+		for(i = 0; *p && p < end && run; p++,i++) {
 			if(*p == '\n') {
-				if(p[1] == '\n' && p[2] == '\n') {
+				if(p[1] == '\n') {
 					run = 0;
-					break;
+					buffer[i++] = '\n';
+					buffer[i++] = '\n';
+					p++;
 				}
-				else if(p[1] == ' ') {
+				if(p[1] == ' ') {
+					run = 1;
 					p += indent + 1;
 				}
 				else if(p[1] >= '0' && p[1] <= '9' || strchr("+-*",p[1])) {
+					run = 1;
 					p += indent;
 					break;
 				}
-				buffer[i++] = '\n';
+				else if(run == 0)
+					break;
 			}
 			buffer[i] = *p;
 		}
+		buffer[i] = '\0';
+		while(buffer[--i] == '\n') buffer[i] = '\0';
 		fputs("<li>",stdout);
-		process(buffer,buffer+i);
+		process(buffer,i+2+buffer);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
 	free(buffer);
-	return p - begin;
+	while(*(--p) == '\n');
+	return p + 1 - begin;
 }
 
 unsigned int
@@ -245,8 +256,8 @@ doparagraph(const char *begin, const char *end) {
 
 	if(strncmp(begin,"\n\n",2))
 		return 0;
-	if(!(p = strstr(begin+2,"\n\n")))
-		p = end;
+	if(!(p = strstr(begin + 2,"\n\n")))
+		p = end - 1;
 	if(p > end)
 		return 0;
 	if(p - begin - 2 <= 0) 
@@ -426,7 +437,6 @@ main(int argc, char *argv[]) {
 				eprint("Malloc failed.");
 		}
 	}
-	
 	process(buffer,buffer+strlen(buffer));
 	free(buffer);
 }
