@@ -140,6 +140,7 @@ dolineprefix(const char *begin, const char *end) {
 			continue;
 		if(!(buffer = malloc(end - p+1)))
 			eprint("Malloc failed.");
+		buffer[0] = '\0';
 		printf("\n<%s>",lineprefix[i].tag);
 		for(j = 0; p != end; p++, j++) {
 			buffer[j] = *p;
@@ -149,6 +150,7 @@ dolineprefix(const char *begin, const char *end) {
 				p += l;
 			}
 		}
+		buffer[j] = '\0';
 		if(lineprefix[i].process)
 			process(buffer,buffer+strlen(buffer));
 		else
