@@ -9,8 +9,12 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define BUFFERSIZE 1024
+#define BUFFERSIZE 512
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
+#define ADDC(b,i) if((i + 1) % BUFFERSIZE == 0) \
+	{ b = realloc(b,((i + 1)+ BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); } \
+	b[i]
+
 
 typedef unsigned int (*Parser)(const char *, const char *);
 struct Tag {
@@ -18,6 +22,7 @@ struct Tag {
 	int process;
 	char *tag;
 };
+
 
 void eprint(const char *format, ...);			/* Prints error and exits */
 void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
@@ -138,19 +143,19 @@ dolineprefix(const char *begin, const char *end) {
 			continue;
 		if(strncmp(lineprefix[i].search,p+1,l))
 			continue;
-		if(!(buffer = malloc(end - p+1)))
+		if(!(buffer = malloc(BUFFERSIZE)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
 		printf("\n<%s>",lineprefix[i].tag);
 		for(j = 0; p != end; p++, j++) {
-			buffer[j] = *p;
+			ADDC(buffer,j) = *p;
 			if(*p == '\n') {
 				if(strncmp(lineprefix[i].search,p+1,l) != 0)
 					break;
 				p += l;
 			}
 		}
-		buffer[j] = '\0';
+		ADDC(buffer,j) = '\0';
 		if(lineprefix[i].process)
 			process(buffer,buffer+strlen(buffer));
 		else
@@ -227,7 +232,7 @@ dolist(const char *begin, const char *end) {
 	for(p++; *p && p != end && *p == ' '; p++);
 	indent = p - q - 1;
 
-	if(!(buffer = malloc(end - q+1)))
+	if(!(buffer = malloc(BUFFERSIZE)))
 		eprint("Malloc failed.");
 
 	puts(ul ? "<ul>" : "<ol>");
@@ -238,12 +243,12 @@ dolist(const char *begin, const char *end) {
 			if(*p == '\n') {
 				if(p[1] == '\n') {
 					run = 0;
-					buffer[i++] = '\n';
+					ADDC(buffer,i++) = '\n';
 					p++;
 				}
 				if(p[1] == ' ') {
 					run = 1;
-					buffer[i++] = '\n';
+					ADDC(buffer,i++) = '\n';
 					p += indent + 1;
 				}
 				else if(p[1] >= '0' && p[1] <= '9' || strchr("+-*",p[1])) {
@@ -254,7 +259,7 @@ dolist(const char *begin, const char *end) {
 				else if(run == 0)
 					break;
 			}
-			buffer[i] = *p;
+			ADDC(buffer,i) = *p;
 		}
 		buffer[i] = '\0';
 		while(buffer[--i] == '\n') buffer[i] = '\0';
