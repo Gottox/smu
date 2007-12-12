@@ -292,7 +292,7 @@ dolist(const char *begin, const char *end) {
 		ADDC(buffer,i) = '\0';
 		while(buffer[--i] == '\n') buffer[i] = '\0';
 		fputs("<li>",stdout);
-		process(buffer,i+1+buffer);
+		process(buffer,i+2+buffer);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
