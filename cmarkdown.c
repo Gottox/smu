@@ -347,6 +347,7 @@ doshortlink(const char *begin, const char *end) {
 		return 0;
 	for(p = begin+1; p && p != end && !strchr(" \t\n",*p); p++) {
 		switch(*p) {
+		case '#':
 		case ':':
 			ismail = -1;
 			break;
