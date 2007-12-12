@@ -257,7 +257,7 @@ dolist(const char *begin, const char *end) {
 		buffer[i] = '\0';
 		while(buffer[--i] == '\n') buffer[i] = '\0';
 		fputs("<li>",stdout);
-		hprint(buffer,i+2+buffer);
+		process(buffer,i+2+buffer);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
