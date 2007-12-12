@@ -12,8 +12,7 @@
 #define BUFFERSIZE 512
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
 #define ADDC(b,i) if((i + 1) % BUFFERSIZE == 0) \
-	{ b = realloc(b,((i + 1)+ BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); } \
-	b[i]
+	{ b = realloc(b,((i + 1)+ BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); }; b[i]
 
 
 typedef unsigned int (*Parser)(const char *, const char *);
@@ -27,6 +26,8 @@ struct Tag {
 void eprint(const char *format, ...);			/* Prints error and exits */
 void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
 unsigned int doamp(const char *begin, const char *end);	/* Parser for & */
+unsigned int dohtml(const char *begin, const char *end);
+							/* Parser for html */
 unsigned int dolineprefix(const char *begin, const char *end);
 							/* Parser for line prefix tags */
 unsigned int dolink(const char *begin, const char *end);
@@ -45,7 +46,7 @@ unsigned int dounderline(const char *begin, const char *end);
 							/* Parser for underline tags */
 void process(const char *begin, const char *end);	/* Processes range between begin and end. */
 
-Parser parsers[] = { dounderline, dolineprefix, dolist, doparagraph,
+Parser parsers[] = { dounderline, dohtml, dolineprefix, dolist, doparagraph,
 	dosurround, dolink, doshortlink, doamp, doreplace };	/* list of parsers */
 FILE *source;
 unsigned int bsize = 0, nohtml = 0;
@@ -127,12 +128,37 @@ doamp(const char *begin, const char *end) {
 	return 1;
 }
 unsigned int
+dohtml(const char *begin, const char *end) {
+	const char *p, *tag, *tagend;
+	if(nohtml || *begin != '\n' || !*begin)
+		return 0;
+	p = begin;
+	if(p[1] == '\n')
+		p++;
+	if(p[1] != '<' || strchr(" /\n\t\\",p[2]))
+		return 0;
+	tag = p + 2;
+	p += 2;
+	for(; !strchr(" >",*p);p++);
+	tagend = p;
+	while((p = strstr(p,"\n</")) && p < end) {
+		p+=3;
+		if(strncmp(p, tag, tagend-tag) == 0 && p[tagend-tag] == '>') {
+			p++;
+			fwrite(begin, sizeof(char), p - begin + tagend - tag,stdout);
+			puts("\n");
+			return p - begin + tagend - tag;
+		}
+	}
+	return 0;
+}
+unsigned int
 dolineprefix(const char *begin, const char *end) {
 	unsigned int i, j, l;
 	char *buffer;
 	const char *p;
 
-	if(*begin != '\n')
+	if(*begin != '\n' || !*begin)
 		return 0;
 	p = begin;
 	if(p[1] == '\n')
@@ -243,12 +269,14 @@ dolist(const char *begin, const char *end) {
 			if(*p == '\n') {
 				if(p[1] == '\n') {
 					run = 0;
-					ADDC(buffer,i++) = '\n';
+					ADDC(buffer,i) = '\n';
+					i++;
 					p++;
 				}
 				if(p[1] == ' ') {
 					run = 1;
-					ADDC(buffer,i++) = '\n';
+					ADDC(buffer,i) = '\n';
+					i++;
 					p += indent + 1;
 				}
 				else if(p[1] >= '0' && p[1] <= '9' || strchr("+-*",p[1])) {
@@ -261,10 +289,10 @@ dolist(const char *begin, const char *end) {
 			}
 			ADDC(buffer,i) = *p;
 		}
-		buffer[i] = '\0';
+		ADDC(buffer,i) = '\0';
 		while(buffer[--i] == '\n') buffer[i] = '\0';
 		fputs("<li>",stdout);
-		process(buffer,i+2+buffer);
+		process(buffer,i+1+buffer);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
@@ -420,7 +448,7 @@ process(const char *begin, const char *end) {
 	int affected;
 	unsigned int i;
 	
-	for(p = begin; *p && p != end;) {
+	for(p = begin; *p && p < end;) {
 		affected = 0;
 		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
 			affected = parsers[i](p, end);
