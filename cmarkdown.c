@@ -237,11 +237,11 @@ dolist(const char *begin, const char *end) {
 				if(p[1] == '\n') {
 					run = 0;
 					buffer[i++] = '\n';
-					buffer[i++] = '\n';
 					p++;
 				}
 				if(p[1] == ' ') {
 					run = 1;
+					buffer[i++] = '\n';
 					p += indent + 1;
 				}
 				else if(p[1] >= '0' && p[1] <= '9' || strchr("+-*",p[1])) {
@@ -257,7 +257,7 @@ dolist(const char *begin, const char *end) {
 		buffer[i] = '\0';
 		while(buffer[--i] == '\n') buffer[i] = '\0';
 		fputs("<li>",stdout);
-		process(buffer,i+2+buffer);
+		hprint(buffer,i+2+buffer);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
