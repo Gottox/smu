@@ -1,5 +1,5 @@
 # cmarkdown version
-VERSION = 0.4
+VERSION = 0.4.1
 
 # paths
 PREFIX = /usr/local
