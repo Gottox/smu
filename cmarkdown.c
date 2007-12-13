@@ -468,8 +468,8 @@ process(const char *begin, const char *end) {
 		if(affected)
 			p += affected;
 		else {
-			for(q = p; *q == '\n' && q != end; q++);
-			if(q == end)
+			for(q = p; *q && *q == '\n' && q != end; q++);
+			if(q == end || !*q)
 				return;
 			else if(nohtml)
 				hprint(p,p+1);
