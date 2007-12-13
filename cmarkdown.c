@@ -12,7 +12,7 @@
 #define BUFFERSIZE 512
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
 #define ADDC(b,i) if((i + 1) % BUFFERSIZE == 0) \
-	{ b = realloc(b,((i + 1)+ BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); }; b[i]
+	{ b = realloc(b,((i + 1)+ BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); }; b[i+1] = '\0'; b[i]
 
 
 typedef unsigned int (*Parser)(const char *, const char *);
@@ -268,6 +268,8 @@ dolist(const char *begin, const char *end) {
 			if(*p == '\n') {
 				if(p[1] == '\n') {
 					p++;
+					ADDC(buffer,i) = '\n';
+					i++;
 					run = 0;
 				}
 				q = p + 1;
@@ -282,28 +284,21 @@ dolist(const char *begin, const char *end) {
 						j = 0;
 				}
 				for(;q[j] == ' ' && j < indent; j++);
-				//printf("--%i %i--\n",j,indent);
 				if(j == indent) {
+					ADDC(buffer,i) = '\n';
+					i++;
 					p += indent;
 					run = 1;
 					if(q[0] == ' ')
 						p++;
 					else
 						break;
-					ADDC(buffer,i) = '\n';
-					i++;
 				}
-				ADDC(buffer,i) = '\n';
-				i++;
 			}
 			ADDC(buffer,i) = *p;
 		}
-		ADDC(buffer,i) = '\0';
-		if(run == 0)
-			while(buffer[--i] == '\n')
-				buffer[i] = '\0';
 		fputs("<li>",stdout);
-		process(buffer,buffer+i+1);
+		process(buffer,buffer+i);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
@@ -328,7 +323,7 @@ doparagraph(const char *begin, const char *end) {
 	fputs("\n<p>",stdout);
 	process(begin+2,p);
 	fputs("</p>\n",stdout);
-	return p - begin + 1;
+	return p - begin;
 }
 
 unsigned int
@@ -468,13 +463,13 @@ process(const char *begin, const char *end) {
 		if(affected)
 			p += affected;
 		else {
-			for(q = p; *q && *q == '\n' && q != end; q++);
-			if(q == end || !*q)
-				return;
-			else if(nohtml)
-				hprint(p,p+1);
-			else
-				putchar(*p);
+			for(q = p; *q == '\n' && q != end; q++);
+			if(q != end && *q) {
+				if(nohtml)
+					hprint(p,p+1);
+				else
+					putchar(*p);
+			}
 			p++;
 		}
 	}
