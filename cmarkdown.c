@@ -260,7 +260,7 @@ dolist(const char *begin, const char *end) {
 	if(!(buffer = malloc(BUFFERSIZE)))
 		eprint("Malloc failed.");
 
-	puts(ul ? "<ul>" : "<ol>");
+	puts(ul ? "\n<ul>" : "\n<ol>");
 	run = 1;
 	for(i = 0; *p && p < end && run; p++) {
 		buffer[0] = '\0';
@@ -271,20 +271,22 @@ dolist(const char *begin, const char *end) {
 					run = 0;
 				}
 				q = p + 1;
+				j = 0;
 				if(ul && (*q == '-' || *q == '*' || *q == '+'))
 					j = 1;
-				else {
-					for(j = 0; q[j] >= '0' && q[j] <= '9' && j < indent; j++);
+				else if(!ul) {
+					for(; q[j] >= '0' && q[j] <= '9' && j < indent; j++);
 					if(j > 0 && q[j] == '.')
 						j++;
 					else
 						j = 0;
 				}
 				for(;q[j] == ' ' && j < indent; j++);
+				//printf("--%i %i--\n",j,indent);
 				if(j == indent) {
 					p += indent;
 					run = 1;
-					if(q[1] == ' ')
+					if(q[0] == ' ')
 						p++;
 					else
 						break;
@@ -326,7 +328,7 @@ doparagraph(const char *begin, const char *end) {
 	fputs("\n<p>",stdout);
 	process(begin+2,p);
 	fputs("</p>\n",stdout);
-	return p - begin;
+	return p - begin + 1;
 }
 
 unsigned int
