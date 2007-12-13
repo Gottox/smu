@@ -244,16 +244,15 @@ dolist(const char *begin, const char *end) {
 	if(p[1] == '\n')
 		p++;
 	q = p;
-	if(strchr("+-*",p[1]) && p[2] == ' ') {
+	if((p[1] == '-' || p[1] == '*' || p[1] == '+') && p[2] == ' ') {
 		ul = 1;
 		p++;
 	}
 	else {
-		for(p++; *p && p != end && *p <= '0' && *p >= '9';p++);
-		p++;
+		ul = 0;
+		for(p++; *p && p != end && *p >= '0' && *p <= '9';p++);
 		if(!*p || p[0] != '.' || p[1] != ' ')
 			return 0;
-		ul = 0;
 	}
 	for(p++; *p && p != end && *p == ' '; p++);
 	indent = p - q - 1;
@@ -263,40 +262,51 @@ dolist(const char *begin, const char *end) {
 
 	puts(ul ? "<ul>" : "<ol>");
 	run = 1;
-	for(i = 0, p = q+1+indent; *p && p < end && run; p++) {
+	for(i = 0; *p && p < end && run; p++) {
 		buffer[0] = '\0';
 		for(i = 0; *p && p < end && run; p++,i++) {
 			if(*p == '\n') {
 				if(p[1] == '\n') {
-					run = 0;
-					ADDC(buffer,i) = '\n';
-					i++;
 					p++;
+					run = 0;
 				}
-				if(p[1] == ' ') {
+				q = p + 1;
+				if(ul && (*q == '-' || *q == '*' || *q == '+'))
+					j = 1;
+				else {
+					for(j = 0; q[j] >= '0' && q[j] <= '9' && j < indent; j++);
+					if(j > 0 && q[j] == '.')
+						j++;
+					else
+						j = 0;
+				}
+				for(;q[j] == ' ' && j < indent; j++);
+				if(j == indent) {
+					p += indent;
 					run = 1;
+					if(q[1] == ' ')
+						p++;
+					else
+						break;
 					ADDC(buffer,i) = '\n';
 					i++;
-					p += indent + 1;
 				}
-				else if(p[1] >= '0' && p[1] <= '9' || strchr("+-*",p[1])) {
-					run = 1;
-					p += indent;
-					break;
-				}
-				else if(run == 0)
-					break;
+				ADDC(buffer,i) = '\n';
+				i++;
 			}
 			ADDC(buffer,i) = *p;
 		}
 		ADDC(buffer,i) = '\0';
-		while(buffer[--i] == '\n') buffer[i] = '\0';
+		if(run == 0)
+			while(buffer[--i] == '\n')
+				buffer[i] = '\0';
 		fputs("<li>",stdout);
-		process(buffer,i+2+buffer);
+		process(buffer,buffer+i+1);
 		fputs("</li>\n",stdout);
 	}
 	puts(ul ? "</ul>" : "</ol>");
 	free(buffer);
+	p--;
 	while(*(--p) == '\n');
 	return p + 1 - begin;
 }
@@ -445,7 +455,7 @@ dounderline(const char *begin, const char *end) {
 
 void
 process(const char *begin, const char *end) {
-	const char *p;
+	const char *p, *q;
 	int affected;
 	unsigned int i;
 	
@@ -456,7 +466,10 @@ process(const char *begin, const char *end) {
 		if(affected)
 			p += affected;
 		else {
-			if(nohtml)
+			for(q = p; *q == '\n' && q != end; q++);
+			if(q == end)
+				return;
+			else if(nohtml)
 				hprint(p,p+1);
 			else
 				putchar(*p);
@@ -496,5 +509,6 @@ main(int argc, char *argv[]) {
 		}
 	}
 	process(buffer,buffer+strlen(buffer));
+	putchar('\n');
 	free(buffer);
 }
