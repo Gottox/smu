@@ -10,7 +10,7 @@ INCS = -I. -I/usr/include
 LIBS = -L/usr/lib
 
 # flags
-CFLAGS = -Os ${INCS} -DVERSION=\"${VERSION}\"
+CFLAGS = -Os ${INCS} -DVERSION=\"${VERSION}\" -Wall
 LDFLAGS = ${LIBS}
 
 # compiler

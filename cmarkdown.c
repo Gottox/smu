@@ -216,7 +216,7 @@ dolineprefix(const char *begin, const char *end, int first) {
 unsigned int
 dolink(const char *begin, const char *end, int first) {
 	int img;
-	const char *desc, *link, *p, *q, *r, *descend, *linkend;
+	const char *desc, *link, *p, *q, *descend, *linkend;
 
 	if(*begin == '[')
 		img = 0;
@@ -254,16 +254,17 @@ dolink(const char *begin, const char *end, int first) {
 
 unsigned int
 dolist(const char *begin, const char *end, int first) {
-	unsigned int i,j,indent,run,ul, isblock;
+	unsigned int i, j, indent, run, ul, isblock;
 	const char *p, *q;
 	char *buffer;
 
-	if(*begin != '\n' || begin[1] != '\n' && !first)
+	if((*begin != '\n' || begin[1] != '\n') && !first)
 		return 0;
 	p = begin;
 	if(!first)
 		p += 2;
 	q = p;
+	isblock = 0;
 	if((*p == '-' || *p == '*' || *p == '+') && (p[1] == ' ' || p[1] == '\t')) {
 		ul = 1;
 	}
@@ -290,6 +291,7 @@ dolist(const char *begin, const char *end, int first) {
 					ADDC(buffer,i) = '\n';
 					i++;
 					run = 0;
+					isblock = 1;
 				}
 				q = p + 1;
 				j = 0;
@@ -317,7 +319,7 @@ dolist(const char *begin, const char *end, int first) {
 			ADDC(buffer,i) = *p;
 		}
 		fputs("<li>",stdout);
-		process(buffer,buffer+i,0); //TODO
+		process(buffer,buffer+i,isblock); //TODO
 		fputs("</li>\n",stdout);
 	}
 	fputs(ul ? "</ul>\n" : "</ol>\n",stdout);
@@ -524,7 +526,7 @@ main(int argc, char *argv[]) {
 
 
 	p = buffer+strlen(buffer);
-	while(s = fread(p, sizeof(char),BUFFERSIZE, source)) {
+	while((s = fread(p, sizeof(char),BUFFERSIZE, source))) {
 		p += s;
 		*p = '\0';
 		if(BUFFERSIZE + strlen(buffer) > bsize) {
@@ -536,5 +538,6 @@ main(int argc, char *argv[]) {
 	process(buffer,buffer+strlen(buffer),1);
 	putchar('\n');
 	free(buffer);
+	return 0;
 }
 
