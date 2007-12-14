@@ -258,11 +258,11 @@ dolist(const char *begin, const char *end, int first) {
 	const char *p, *q;
 	char *buffer;
 
-	if(*begin != '\n' && !first)
+	if(*begin != '\n' || begin[1] != '\n' && !first)
 		return 0;
 	p = begin;
 	if(!first)
-		p++;
+		p += 2;
 	q = p;
 	if((*p == '-' || *p == '*' || *p == '+') && (p[1] == ' ' || p[1] == '\t')) {
 		ul = 1;
