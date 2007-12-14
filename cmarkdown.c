@@ -24,25 +24,25 @@ struct Tag {
 
 
 void eprint(const char *format, ...);			/* Prints error and exits */
-unsigned int doamp(const char *begin, const char *end, int first);
+unsigned int doamp(const char *begin, const char *end, int newblock);
 							/* Parser for & */
-unsigned int dohtml(const char *begin, const char *end, int first);
+unsigned int dohtml(const char *begin, const char *end, int newblock);
 							/* Parser for html */
-unsigned int dolineprefix(const char *begin, const char *end, int first);
+unsigned int dolineprefix(const char *begin, const char *end, int newblock);
 							/* Parser for line prefix tags */
-unsigned int dolink(const char *begin, const char *end, int first);
+unsigned int dolink(const char *begin, const char *end, int newblock);
 							/* Parser for links and images */
-unsigned int dolist(const char *begin, const char *end, int first);
+unsigned int dolist(const char *begin, const char *end, int newblock);
 							/* Parser for lists */
-unsigned int doparagraph(const char *begin, const char *end, int first);
+unsigned int doparagraph(const char *begin, const char *end, int newblock);
 							/* Parser for paragraphs */
-unsigned int doreplace(const char *begin, const char *end, int first);
+unsigned int doreplace(const char *begin, const char *end, int newblock);
 							/* Parser for simple replaces */
-unsigned int doshortlink(const char *begin, const char *end, int first);
+unsigned int doshortlink(const char *begin, const char *end, int newblock);
 							/* Parser for links and images */
-unsigned int dosurround(const char *begin, const char *end, int first);
+unsigned int dosurround(const char *begin, const char *end, int newblock);
 							/* Parser for surrounding tags */
-unsigned int dounderline(const char *begin, const char *end, int first);
+unsigned int dounderline(const char *begin, const char *end, int newblock);
 							/* Parser for underline tags */
 void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
 void process(const char *begin, const char *end, int isblock);
@@ -64,8 +64,8 @@ struct Tag lineprefix[] = {
 	{ "# ",		1,	"h1" },
 };
 struct Tag underline[] = {
-	{ "=",		1,	"h1" },
-	{ "-",		1,	"h2" },
+	{ "=",		1,	"<h1>" },
+	{ "-",		1,	"<h2>" },
 };
 struct Tag surround[] = {
 	{ "``",		0,	"code" },
@@ -118,7 +118,7 @@ eprint(const char *format, ...) {
 }
 
 unsigned int
-doamp(const char *begin, const char *end, int first) {
+doamp(const char *begin, const char *end, int newblock) {
 	const char *p;
 
 	if(*begin != '&')
@@ -132,7 +132,7 @@ doamp(const char *begin, const char *end, int first) {
 	return 1;
 }
 unsigned int
-dohtml(const char *begin, const char *end, int first) {
+dohtml(const char *begin, const char *end, int newblock) {
 	const char *p, *tag, *tagend;
 	if(nohtml || *begin != '\n' || !*begin)
 		return 0;
@@ -151,28 +151,23 @@ dohtml(const char *begin, const char *end, int first) {
 			p++;
 			fwrite(begin, sizeof(char), p - begin + tagend - tag,stdout);
 			puts("\n");
-			return p - begin + tagend - tag;
+			return -(p - begin + tagend - tag);
 		}
 	}
 	return 0;
 }
 unsigned int
-dolineprefix(const char *begin, const char *end, int first) {
+dolineprefix(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, l;
 	char *buffer;
 	const char *p;
 
-	if(*begin != '\n' && !first)
+	if(!newblock)
 		return 0;
-	if(first)
 		p = begin;
-	else
-		p = begin + 1;
 	for(i = 0; i < LENGTH(lineprefix); i++) {
 		l = strlen(lineprefix[i].search);
 		if(end - p < l)
-			continue;
-		if(!first && *begin != '\n')
 			continue;
 		if(strncmp(lineprefix[i].search,p,l))
 			continue;
@@ -195,13 +190,13 @@ dolineprefix(const char *begin, const char *end, int first) {
 			hprint(buffer,buffer+strlen(buffer));
 		printf("</%s>\n",lineprefix[i].tag);
 		free(buffer);
-		return p - begin;
+		return -(p - begin);
 	}
 	return 0;
 }
 
 unsigned int
-dolink(const char *begin, const char *end, int first) {
+dolink(const char *begin, const char *end, int newblock) {
 	int img;
 	const char *desc, *link, *p, *q, *descend, *linkend;
 
@@ -240,16 +235,14 @@ dolink(const char *begin, const char *end, int first) {
 }
 
 unsigned int
-dolist(const char *begin, const char *end, int first) {
+dolist(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, indent, run, ul, isblock;
 	const char *p, *q;
 	char *buffer;
 
-	if((*begin != '\n' || begin[1] != '\n') && !first)
+	if(!newblock)
 		return 0;
 	p = begin;
-	if(!first)
-		p += 2;
 	q = p;
 	isblock = 0;
 	if((*p == '-' || *p == '*' || *p == '+') && (p[1] == ' ' || p[1] == '\t')) {
@@ -313,32 +306,29 @@ dolist(const char *begin, const char *end, int first) {
 	free(buffer);
 	p--;
 	while(*(--p) == '\n');
-	return p - begin + 1;
+	return -(p - begin + 1);
 }
 
 unsigned int
-doparagraph(const char *begin, const char *end, int first) {
+doparagraph(const char *begin, const char *end, int newblock) {
 	const char *p, *q;
 
-	if(first)
-		p = begin;
-	else if(*begin == '\n' && begin[1] == '\n')
-		p = begin + 2;
-	else
+	if(!newblock)
 		return 0;
+	p = begin;
 	q = strstr(p, "\n\n");
 	if(!q || q > end)
 		q = end;
 	if(q - begin <= 1)
 		return 0;
-	fputs("<p>",stdout);
+	fputs("<p>\n",stdout);
 	process(p,q,0);
-	fputs("</p>\n",stdout);
-	return q - begin;
+	fputs("\n</p>\n",stdout);
+	return -(q - begin);
 }
 
 unsigned int
-doreplace(const char *begin, const char *end, int first) {
+doreplace(const char *begin, const char *end, int newblock) {
 	unsigned int i, l;
 
 	for(i = 0; i < LENGTH(insert); i++)
@@ -357,7 +347,7 @@ doreplace(const char *begin, const char *end, int first) {
 }
 
 unsigned int
-doshortlink(const char *begin, const char *end, int first) {
+doshortlink(const char *begin, const char *end, int newblock) {
 	const char *p, *c;
 	int ismail = 0;
 
@@ -401,7 +391,7 @@ doshortlink(const char *begin, const char *end, int first) {
 }
 
 unsigned int
-dosurround(const char *begin, const char *end, int first) {
+dosurround(const char *begin, const char *end, int newblock) {
 	unsigned int i,l;
 	const char *p, *ps, *q, *qend;
 
@@ -431,18 +421,13 @@ dosurround(const char *begin, const char *end, int first) {
 }
 
 unsigned int
-dounderline(const char *begin, const char *end, int first) {
-	unsigned int i, j, l, nl;
+dounderline(const char *begin, const char *end, int newblock) {
+	unsigned int i, j, l;
 	const char *p;
  
-	if(*begin != '\n' && !first)
+	if(!newblock)
 		return 0;
 	p = begin;
-	nl = 0;
-	if(!first) {
-		nl = 1;
-		p++;
-	}
 	for(l = 0; p[l] != '\n' && p[l] && p+l != end; l++);
 	p += l + 1;
 	if(l == 0)
@@ -452,11 +437,11 @@ dounderline(const char *begin, const char *end, int first) {
 		if(j >= l) {
 			printf("<%s>",underline[i].tag);
 			if(underline[i].process)
-				process(begin + nl, begin + l + nl, 0);
+				process(begin, begin + l, 0);
 			else
-				hprint(begin + nl, begin + l + nl);
+				hprint(begin, begin + l);
 			printf("</%s>\n",underline[i].tag);
-			return j + p - begin;
+			return -(j + p - begin);
 		}
 	}
 	return 0;
@@ -481,32 +466,32 @@ hprint(const char *begin, const char *end) {
 }
 
 void
-process(const char *begin, const char *end, int isblock) {
+process(const char *begin, const char *end, int newblock) {
 	const char *p, *q;
 	int affected;
 	unsigned int i;
 	
-	for(p = begin; *p && *p == '\n' && p < end;p++);
-	for(; *p && p < end;) {
+	for(p = begin; *p && p < end;) {
+		if(newblock)
+			while(*p == '\n') p++;
 		affected = 0;
 		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
-			affected = parsers[i](p, end, isblock);
-		if(affected) {
-			p += affected;
-			while(*p+1 == '\n')
-				p++;
-		}
-		else {
-			for(q = p; *q == '\n' && q != end; q++);
-			if(q != end && *q) {
-				if(nohtml)
-					hprint(p,p+1);
-				else
-					putchar(*p);
-			}
+			affected = parsers[i](p, end, newblock);
+		p += abs(affected);
+		if(!affected) {
+			if(nohtml)
+				hprint(p,p+1);
+			else
+				putchar(*p);
 			p++;
 		}
-		isblock = 0;
+		for(q = p; *q == '\n' && q < end; q++);
+		if(q == end)
+			return;
+		else if(p[0] == '\n' && p[1] == '\n')
+			newblock = 1;
+		else
+			newblock = affected < 0;
 	}
 }
 
@@ -522,7 +507,8 @@ main(int argc, char *argv[]) {
 		eprint("Usage %s [-n] [file]\n -n escape html strictly\n",argv[0]);
 	if(argc > 1 && strcmp("-n", argv[1]) == 0)
 		nohtml = 1;
-	if(argc > 1 + nohtml && strcmp("-", argv[1 + nohtml]) != 0 && !(source = fopen(argv[1 + nohtml],"r")))
+	if(argc > 1 + nohtml && strcmp("-", argv[1 + nohtml]) != 0
+			&& !(source = fopen(argv[1 + nohtml],"r")))
 		eprint("Cannot open file `%s`\n",argv[1 + nohtml]);
 	if(!(buffer = malloc(BUFFERSIZE)))
 		eprint("Malloc failed.");
