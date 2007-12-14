@@ -240,9 +240,12 @@ dolist(const char *begin, const char *end, int newblock) {
 	const char *p, *q;
 	char *buffer;
 
-	if(!newblock)
+	if(newblock)
+		p = begin;
+	else if(*begin == '\n')
+		p = begin + 1;
+	else
 		return 0;
-	p = begin;
 	q = p;
 	isblock = 0;
 	if((*p == '-' || *p == '*' || *p == '+') && (p[1] == ' ' || p[1] == '\t')) {
@@ -260,6 +263,8 @@ dolist(const char *begin, const char *end, int newblock) {
 	if(!(buffer = malloc(BUFFERSIZE)))
 		eprint("Malloc failed.");
 
+	if(!newblock)
+		putchar('\n');
 	fputs(ul ? "<ul>\n" : "<ol>\n",stdout);
 	run = 1;
 	for(i = 0; *p && p < end && run; p++) {
@@ -527,7 +532,6 @@ main(int argc, char *argv[]) {
 		}
 	}
 	process(buffer,buffer+strlen(buffer),1);
-	putchar('\n');
 	free(buffer);
 	return EXIT_SUCCESS;
 }
