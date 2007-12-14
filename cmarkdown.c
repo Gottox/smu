@@ -50,13 +50,12 @@ void process(const char *begin, const char *end, int isblock);
 
 Parser parsers[] = { dounderline, dohtml, dolineprefix, dolist, doparagraph,
 	dosurround, dolink, doshortlink, doamp, doreplace };	/* list of parsers */
-//Parser parsers[] = { doparagraph };
 FILE *source;
 unsigned int bsize = 0, nohtml = 0;
 struct Tag lineprefix[] = {
 	{ "   ",	0,	"pre" },
 	{ "\t",		0,	"pre" },
-	{ "> ",		1,	"blockquote" },
+	{ "> ",		2,	"blockquote" },
 	{ "###### ",	1,	"h6" },
 	{ "##### ",	1,	"h5" },
 	{ "#### ",	1,	"h4" },
@@ -88,6 +87,21 @@ char * replace[][2] = {
 	{ " #\n",	"\n" },
 	{ " >",		"&gt;" },
 	{ "< ",		"&lt;" },
+	{ "\\\\",	"\\" },
+	{ "\\`",	"`" },
+	{ "\\*",	"*" },
+	{ "\\_",	"_" },
+	{ "\\{",	"{" },
+	{ "\\}",	"}" },
+	{ "\\[",	"[" },
+	{ "\\]",	"]" },
+	{ "\\(",	"(" },
+	{ "\\)",	")" },
+	{ "\\#",	"#" },
+	{ "\\+",	"+" },
+	{ "\\-",	"-" },
+	{ "\\.",	"." },
+	{ "\\!",	"!" },
 };
 char * insert[][2] = {
 	{ "  \n",	"<br />" },
@@ -163,20 +177,23 @@ dolineprefix(const char *begin, const char *end, int first) {
 
 	if(*begin != '\n' && !first)
 		return 0;
-	p = begin;
-	if(!first)
-		p++;
+	if(first)
+		p = begin;
+	else
+		p = begin + 1;
 	for(i = 0; i < LENGTH(lineprefix); i++) {
 		l = strlen(lineprefix[i].search);
-		if(end - p+1 < l)
+		if(end - p < l)
 			continue;
-		if(strncmp(lineprefix[i].search,p+1,l))
+		if(!first && *begin != '\n')
+			continue;
+		if(strncmp(lineprefix[i].search,p,l))
 			continue;
 		if(!(buffer = malloc(BUFFERSIZE)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
-		printf("\n<%s>",lineprefix[i].tag);
-		for(j = 0; p != end; p++, j++) {
+		printf("<%s>\n",lineprefix[i].tag);
+		for(j = 0, p += l; p != end; p++, j++) {
 			ADDC(buffer,j) = *p;
 			if(*p == '\n') {
 				if(strncmp(lineprefix[i].search,p+1,l) != 0)
@@ -186,7 +203,7 @@ dolineprefix(const char *begin, const char *end, int first) {
 		}
 		ADDC(buffer,j) = '\0';
 		if(lineprefix[i].process)
-			process(buffer,buffer+strlen(buffer),1);
+			process(buffer,buffer+strlen(buffer), lineprefix[i].process >= 2);
 		else
 			hprint(buffer,buffer+strlen(buffer));
 		printf("</%s>\n",lineprefix[i].tag);
@@ -247,16 +264,16 @@ dolist(const char *begin, const char *end, int first) {
 	if(!first)
 		p++;
 	q = p;
-	if((*p == '-' || *p == '*' || *p == '+') && p[1] == ' ') {
+	if((*p == '-' || *p == '*' || *p == '+') && (p[1] == ' ' || p[1] == '\t')) {
 		ul = 1;
 	}
 	else {
 		ul = 0;
 		for(; *p && p != end && *p >= '0' && *p <= '9';p++);
-		if(!*p || p[0] != '.' || p[1] != ' ')
+		if(!*p || p[0] != '.' || (p[1] != ' ' && p[1] != '\t'))
 			return 0;
 	}
-	for(p++; *p && p != end && *p == ' '; p++);
+	for(p++; *p && p != end && (*p == ' ' || *p == '\t'); p++);
 	indent = p - q;
 
 	if(!(buffer = malloc(BUFFERSIZE)))
@@ -285,13 +302,13 @@ dolist(const char *begin, const char *end, int first) {
 					else
 						j = 0;
 				}
-				for(;q[j] == ' ' && j < indent; j++);
+				for(;(q[j] == ' ' || *q == '\t') && j < indent; j++);
 				if(j == indent) {
 					ADDC(buffer,i) = '\n';
 					i++;
 					p += indent;
 					run = 1;
-					if(q[0] == ' ')
+					if(*q == ' ' || *q == '\t')
 						p++;
 					else
 						break;
@@ -316,11 +333,11 @@ doparagraph(const char *begin, const char *end, int first) {
 
 	if(first)
 		p = begin;
-	else if(*begin == '\n')
-		p = begin + 1;
+	else if(*begin == '\n' && begin[1] == '\n')
+		p = begin + 2;
 	else
 		return 0;
-	q = strchr(p, '\n');
+	q = strstr(p, "\n\n");
 	if(!q || q > end)
 		q = end;
 	if(q - begin <= 1)
@@ -397,7 +414,7 @@ doshortlink(const char *begin, const char *end, int first) {
 unsigned int
 dosurround(const char *begin, const char *end, int first) {
 	unsigned int i,l;
-	const char *p,*ps;
+	const char *p, *ps, *q, *qend;
 
 	for(i = 0; i < LENGTH(surround); i++) {
 		l = strlen(surround[i].search);
@@ -412,10 +429,12 @@ dosurround(const char *begin, const char *end, int first) {
 		if(!p || p > end)
 			continue;
 		printf("<%s>",surround[i].tag);
+		for(q = begin + strlen(surround[i].search); *q == ' '; q++);
+		for(qend = p-1; *qend == ' '; qend--);
 		if(surround[i].process)
-			process(begin + strlen(surround[i].search), p,0);
+			process(q, qend+1,0);
 		else
-			hprint(begin + strlen(surround[i].search), p);
+			hprint(q, qend+1);
 		printf("</%s>",surround[i].tag);
 		return p - begin + l;
 	}
@@ -518,3 +537,4 @@ main(int argc, char *argv[]) {
 	putchar('\n');
 	free(buffer);
 }
+
