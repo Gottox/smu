@@ -24,7 +24,6 @@ struct Tag {
 
 
 void eprint(const char *format, ...);			/* Prints error and exits */
-void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
 unsigned int doamp(const char *begin, const char *end, int first);
 							/* Parser for & */
 unsigned int dohtml(const char *begin, const char *end, int first);
@@ -45,6 +44,7 @@ unsigned int dosurround(const char *begin, const char *end, int first);
 							/* Parser for surrounding tags */
 unsigned int dounderline(const char *begin, const char *end, int first);
 							/* Parser for underline tags */
+void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
 void process(const char *begin, const char *end, int isblock);
 							/* Processes range between begin and end. */
 
@@ -115,19 +115,6 @@ eprint(const char *format, ...) {
 	vfprintf(stderr, format, ap);
 	va_end(ap);
 	exit(EXIT_FAILURE);
-}
-
-void
-hprint(const char *begin, const char *end) {
-	const char *p;
-
-	for(p = begin; p && p != end; p++) {
-		if(*p == '&')		fputs("&amp;",stdout);
-		else if(*p == '"')	fputs("&quot;",stdout);
-		else if(*p == '>')	fputs("&gt;",stdout);
-		else if(*p == '<')	fputs("&lt;",stdout);
-		else			putchar(*p);
-	}
 }
 
 unsigned int
@@ -473,6 +460,24 @@ dounderline(const char *begin, const char *end, int first) {
 		}
 	}
 	return 0;
+}
+
+void
+hprint(const char *begin, const char *end) {
+	const char *p;
+
+	for(p = begin; p && p != end; p++) {
+		if(*p == '&')
+			fputs("&amp;",stdout);
+		else if(*p == '"')
+			fputs("&quot;",stdout);
+		else if(*p == '>')
+			fputs("&gt;",stdout);
+		else if(*p == '<')
+			fputs("&lt;",stdout);
+		else
+			putchar(*p);
+	}
 }
 
 void
