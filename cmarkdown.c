@@ -529,6 +529,6 @@ main(int argc, char *argv[]) {
 	process(buffer,buffer+strlen(buffer),1);
 	putchar('\n');
 	free(buffer);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
