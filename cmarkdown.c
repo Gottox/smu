@@ -303,7 +303,7 @@ dolist(const char *begin, const char *end, int newblock) {
 		}
 		ADDC(buffer,i) = '\0';
 		fputs("<li>",stdout);
-		process(buffer,buffer+i,isblock); //TODO
+		process(buffer,buffer+i,isblock);
 		fputs("</li>\n",stdout);
 	}
 	fputs(ul ? "</ul>\n" : "</ol>\n",stdout);
