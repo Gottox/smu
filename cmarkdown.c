@@ -11,8 +11,8 @@
 
 #define BUFFERSIZE 512
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
-#define ADDC(b,i) if((i + 1) % BUFFERSIZE == 0) \
-	{ b = realloc(b,((i + 1)+ BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); }; b[i+1] = '\0'; b[i]
+#define ADDC(b,i) if(i % BUFFERSIZE == 0) \
+	{ b = realloc(b,(i + BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); }; b[i]
 
 
 typedef unsigned int (*Parser)(const char *, const char *, int);
@@ -259,10 +259,8 @@ dolist(const char *begin, const char *end, int newblock) {
 	}
 	for(p++; *p && p != end && (*p == ' ' || *p == '\t'); p++);
 	indent = p - q;
-
 	if(!(buffer = malloc(BUFFERSIZE)))
 		eprint("Malloc failed.");
-
 	if(!newblock)
 		putchar('\n');
 	fputs(ul ? "<ul>\n" : "<ol>\n",stdout);
@@ -303,6 +301,7 @@ dolist(const char *begin, const char *end, int newblock) {
 			}
 			ADDC(buffer,i) = *p;
 		}
+		ADDC(buffer,i) = '\0';
 		fputs("<li>",stdout);
 		process(buffer,buffer+i,isblock); //TODO
 		fputs("</li>\n",stdout);
