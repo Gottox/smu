@@ -518,8 +518,6 @@ main(int argc, char *argv[]) {
 		eprint("Malloc failed.");
 	bsize = BUFFERSIZE;
 	buffer[0] = '\0';
-
-
 	p = buffer+strlen(buffer);
 	while((s = fread(p, sizeof(char),BUFFERSIZE, source))) {
 		p += s;

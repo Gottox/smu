@@ -22,7 +22,7 @@ ${OBJ}: config.mk
 
 cmarkdown: ${OBJ}
 	@echo CC -o $@
-	${CC} -o $@ ${OBJ} ${LDFLAGS}
+	@${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	@echo cleaning
