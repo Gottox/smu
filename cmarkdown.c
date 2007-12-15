@@ -240,6 +240,7 @@ dolist(const char *begin, const char *end, int newblock) {
 	const char *p, *q;
 	char *buffer;
 
+	isblock = 0;
 	if(newblock)
 		p = begin;
 	else if(*begin == '\n')
@@ -247,16 +248,16 @@ dolist(const char *begin, const char *end, int newblock) {
 	else
 		return 0;
 	q = p;
-	isblock = 0;
-	if((*p == '-' || *p == '*' || *p == '+') && (p[1] == ' ' || p[1] == '\t')) {
+	if(*p == '-' || *p == '*' || *p == '+')
 		ul = 1;
-	}
 	else {
 		ul = 0;
 		for(; *p && p != end && *p >= '0' && *p <= '9';p++);
-		if(!*p || p[0] != '.' || (p[1] != ' ' && p[1] != '\t'))
+		if(!*p || p[0] != '.')
 			return 0;
 	}
+	if(p[1] != ' ' && p[1] != '\t')
+		return 0;
 	for(p++; *p && p != end && (*p == ' ' || *p == '\t'); p++);
 	indent = p - q;
 	if(!(buffer = malloc(BUFFERSIZE)))
@@ -274,7 +275,7 @@ dolist(const char *begin, const char *end, int newblock) {
 					ADDC(buffer,i) = '\n';
 					i++;
 					run = 0;
-					isblock = 1;
+					isblock++;
 				}
 				q = p + 1;
 				j = 0;
@@ -303,7 +304,7 @@ dolist(const char *begin, const char *end, int newblock) {
 		}
 		ADDC(buffer,i) = '\0';
 		fputs("<li>",stdout);
-		process(buffer,buffer+i,isblock);
+		process(buffer,buffer+i,isblock > 1 || (isblock == 1 && run));
 		fputs("</li>\n",stdout);
 	}
 	fputs(ul ? "</ul>\n" : "</ol>\n",stdout);
