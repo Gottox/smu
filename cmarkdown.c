@@ -64,8 +64,8 @@ struct Tag lineprefix[] = {
 	{ "# ",		1,	"<h1>",		"</h1>" },
 };
 struct Tag underline[] = {
-	{ "=",		1,	"<h1>",		"</h1>" },
-	{ "-",		1,	"<h2>",		"</h2>" },
+	{ "=",		1,	"<h1>",		"</h1>\n" },
+	{ "-",		1,	"<h2>",		"</h2>\n" },
 };
 struct Tag surround[] = {
 	{ "``",		0,	"<code>",	"</code>" },
@@ -78,7 +78,6 @@ struct Tag surround[] = {
 char * replace[][2] = {
 	{ "\n- - -\n",	"\n<hr />\n" },
 	{ "\n- - - \n",	"\n<hr />\n" },
-	{ " #######\n",	"\n" },
 	{ " ######\n",	"\n" },
 	{ " #####\n",	"\n" },
 	{ " ####\n",	"\n" },
@@ -134,7 +133,8 @@ doamp(const char *begin, const char *end, int newblock) {
 unsigned int
 dohtml(const char *begin, const char *end, int newblock) {
 	const char *p, *tag, *tagend;
-	if(nohtml || *begin != '\n' || !*begin)
+
+	if(nohtml || !newblock || *begin == '\n')
 		return 0;
 	p = begin;
 	if(p[1] == '\n')
@@ -533,4 +533,3 @@ main(int argc, char *argv[]) {
 	free(buffer);
 	return EXIT_SUCCESS;
 }
-

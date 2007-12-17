@@ -21,7 +21,7 @@ options:
 ${OBJ}: config.mk
 
 cmarkdown: ${OBJ}
-	@echo CC -o $@
+	@echo LD $@
 	@${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
