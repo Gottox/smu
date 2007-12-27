@@ -130,6 +130,7 @@ doamp(const char *begin, const char *end, int newblock) {
 	fputs("&amp;",stdout);
 	return 1;
 }
+
 unsigned int
 dohtml(const char *begin, const char *end, int newblock) {
 	const char *p, *tag, *tagend;
@@ -156,6 +157,7 @@ dohtml(const char *begin, const char *end, int newblock) {
 	}
 	return 0;
 }
+
 unsigned int
 dolineprefix(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, l;
@@ -164,7 +166,7 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 
 	if(!newblock)
 		return 0;
-		p = begin;
+	p = begin;
 	for(i = 0; i < LENGTH(lineprefix); i++) {
 		l = strlen(lineprefix[i].search);
 		if(end - p < l)
@@ -174,7 +176,7 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 		if(!(buffer = malloc(BUFFERSIZE)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
-		puts(lineprefix[i].before);
+		fputs(lineprefix[i].before,stdout);
 		for(j = 0, p += l; p != end; p++, j++) {
 			ADDC(buffer,j) = *p;
 			if(*p == '\n') {
