@@ -164,9 +164,12 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 	char *buffer;
 	const char *p;
 
-	if(!newblock)
+	if(newblock)
+		p = begin;
+	else if(*begin == '\n')
+		p = begin + 1;
+	else
 		return 0;
-	p = begin;
 	for(i = 0; i < LENGTH(lineprefix); i++) {
 		l = strlen(lineprefix[i].search);
 		if(end - p < l)
@@ -176,6 +179,8 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 		if(!(buffer = malloc(BUFFERSIZE)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
+		if(*begin == '\n')
+			fputs("\n",stdout);
 		fputs(lineprefix[i].before,stdout);
 		for(j = 0, p += l; p != end; p++, j++) {
 			ADDC(buffer,j) = *p;
@@ -330,7 +335,7 @@ doparagraph(const char *begin, const char *end, int newblock) {
 		return 0;
 	fputs("<p>\n",stdout);
 	process(p,q,0);
-	fputs("\n</p>\n",stdout);
+	fputs("</p>\n",stdout);
 	return -(q - begin);
 }
 
