@@ -1,4 +1,4 @@
-/* cmarkdown
+/* smu - simple markup
  * Copyright (C) <2007> Enno boland <g s01 de>
  *
  * See LICENSE for further informations

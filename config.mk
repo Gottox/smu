@@ -1,4 +1,4 @@
-# cmarkdown version
+# smu version
 VERSION = 0.9
 
 # paths

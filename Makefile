@@ -1,15 +1,15 @@
-# cmarkdown
+# smu - simple markup
 # (c) 2007 Enno Boland
 
 include config.mk
 
-SRC = cmarkdown.c
+SRC = smu.c
 OBJ = ${SRC:.c=.o}
 
-all: options cmarkdown
+all: options smu
 
 options:
-	@echo cmarkdown build options:
+	@echo smu build options:
 	@echo "CFLAGS   = ${CFLAGS}"
 	@echo "LDFLAGS  = ${LDFLAGS}"
 	@echo "CC       = ${CC}"
@@ -20,37 +20,37 @@ options:
 
 ${OBJ}: config.mk
 
-cmarkdown: ${OBJ}
+smu: ${OBJ}
 	@echo LD $@
 	@${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	@echo cleaning
-	@rm -f cmarkdown ${OBJ} cmarkdown-${VERSION}.tar.gz
+	@rm -f smu ${OBJ} smu-${VERSION}.tar.gz
 
 dist: clean
 	@echo creating dist tarball
-	@mkdir -p cmarkdown-${VERSION}
+	@mkdir -p smu-${VERSION}
 	@cp -R LICENSE Makefile config.mk \
-		cmarkdown.1 ${SRC} cmarkdown-${VERSION}
-	@tar -cf cmarkdown-${VERSION}.tar cmarkdown-${VERSION}
-	@gzip cmarkdown-${VERSION}.tar
-	@rm -rf cmarkdown-${VERSION}
+		smu.1 ${SRC} smu-${VERSION}
+	@tar -cf smu-${VERSION}.tar smu-${VERSION}
+	@gzip smu-${VERSION}.tar
+	@rm -rf smu-${VERSION}
 
 install: all
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
 	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	@cp -f cmarkdown ${DESTDIR}${PREFIX}/bin
-	@chmod 755 ${DESTDIR}${PREFIX}/bin/cmarkdown
+	@cp -f smu ${DESTDIR}${PREFIX}/bin
+	@chmod 755 ${DESTDIR}${PREFIX}/bin/smu
 	@echo installing manual page to ${DESTDIR}${MANPREFIX}/man1
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	@sed "s/VERSION/${VERSION}/g" < cmarkdown.1 > ${DESTDIR}${MANPREFIX}/man1/cmarkdown.1
-	@chmod 644 ${DESTDIR}${MANPREFIX}/man1/cmarkdown.1
+	@sed "s/VERSION/${VERSION}/g" < smu.1 > ${DESTDIR}${MANPREFIX}/man1/smu.1
+	@chmod 644 ${DESTDIR}${MANPREFIX}/man1/smu.1
 
 uninstall:
 	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
-	@rm -f ${DESTDIR}${PREFIX}/bin/cmarkdown
+	@rm -f ${DESTDIR}${PREFIX}/bin/smu
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
-	@rm -f ${DESTDIR}${MANPREFIX}/man1/cmarkdown.1
+	@rm -f ${DESTDIR}${MANPREFIX}/man1/smu.1
 
 .PHONY: all options clean dist install uninstall
