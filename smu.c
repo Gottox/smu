@@ -268,7 +268,7 @@ dolist(const char *begin, const char *end, int newblock) {
 		putchar('\n');
 	fputs(ul ? "<ul>\n" : "<ol>\n",stdout);
 	run = 1;
-	for(i = 0; *p && p < end && run; p++) {
+	for(i = 0; p < end && *p && run; p++) {
 		buffer[0] = '\0';
 		for(i = 0; *p && p < end && run; p++,i++) {
 			if(*p == '\n') {
@@ -532,6 +532,7 @@ main(int argc, char *argv[]) {
 		}
 	}
 	process(buffer,buffer+strlen(buffer),1);
+	fclose(source);
 	free(buffer);
 	return EXIT_SUCCESS;
 }
