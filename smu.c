@@ -12,7 +12,7 @@
 #define BUFFERSIZE 512
 #define LENGTH(x) sizeof(x)/sizeof(x[0])
 #define ADDC(b,i) if(i % BUFFERSIZE == 0) \
-	{ b = realloc(b,(i + BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); }; b[i]
+	{ b = realloc(b, (i + BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); } b[i]
 
 
 typedef unsigned int (*Parser)(const char *, const char *, int);
@@ -26,6 +26,8 @@ struct Tag {
 void eprint(const char *format, ...);			/* Prints error and exits */
 unsigned int doamp(const char *begin, const char *end, int newblock);
 							/* Parser for & */
+unsigned int dogtlt(const char *begin, const char *end, int newblock);
+							/* Parser for < and > */
 unsigned int dohtml(const char *begin, const char *end, int newblock);
 							/* Parser for html */
 unsigned int dolineprefix(const char *begin, const char *end, int newblock);
@@ -49,9 +51,10 @@ void process(const char *begin, const char *end, int isblock);
 							/* Processes range between begin and end. */
 
 Parser parsers[] = { dounderline, dohtml, dolineprefix, dolist, doparagraph,
-	dosurround, dolink, doshortlink, doamp, doreplace };	/* list of parsers */
+	dogtlt, dosurround, dolink, doshortlink, doamp, doreplace };
+							/* list of parsers */
 FILE *source;
-unsigned int bsize = 0, nohtml = 0;
+unsigned int nohtml = 0;
 struct Tag lineprefix[] = {
 	{ "   ",	0,	"<pre><code>", "</code></pre>" },
 	{ "\t",		0,	"<pre><code>", "</code></pre>" },
@@ -123,34 +126,41 @@ doamp(const char *begin, const char *end, int newblock) {
 	if(*begin != '&')
 		return 0;
 	if(!nohtml) {
-		for(p = begin + 1; !strchr("; \\\n\t",*p); p++);
-		if(*p == ';')
+		/* TODO: end ? */
+		for(p = begin + 1; p != end && !strchr("; \\\n\t", *p); p++);
+		if(p == end || *p == ';')
 			return 0;
 	}
-	fputs("&amp;",stdout);
+	fputs("&amp;", stdout);
 	return 1;
+}
+
+unsigned int
+dogtlt(const char *begin, const char *end, int newblock) {
+	return 0;
 }
 
 unsigned int
 dohtml(const char *begin, const char *end, int newblock) {
 	const char *p, *tag, *tagend;
 
-	if(nohtml || !newblock || *begin == '\n')
+	/* TODO: end */
+	if(nohtml || !newblock || *begin == '\n' || begin + 2 >= end)
 		return 0;
 	p = begin;
 	if(p[1] == '\n')
 		p++;
-	if(p[1] != '<' || strchr(" /\n\t\\",p[2]))
+	if(p[1] != '<' || strchr(" /\n\t\\", p[2]))
 		return 0;
 	tag = p + 2;
 	p += 2;
-	for(; !strchr(" >",*p);p++);
+	for(; !strchr(" >", *p); p++);
 	tagend = p;
-	while((p = strstr(p,"\n</")) && p < end) {
-		p+=3;
-		if(strncmp(p, tag, tagend-tag) == 0 && p[tagend-tag] == '>') {
+	while((p = strstr(p, "\n</")) && p < end) {
+		p += 3;
+		if(strncmp(p, tag, tagend - tag) == 0 && p[tagend - tag] == '>') {
 			p++;
-			fwrite(begin, sizeof(char), p - begin + tagend - tag,stdout);
+			fwrite(begin, sizeof(char), p - begin + tagend - tag, stdout);
 			puts("\n");
 			return -(p - begin + tagend - tag);
 		}
@@ -174,27 +184,27 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 		l = strlen(lineprefix[i].search);
 		if(end - p < l)
 			continue;
-		if(strncmp(lineprefix[i].search,p,l))
+		if(strncmp(lineprefix[i].search, p, l))
 			continue;
 		if(!(buffer = malloc(BUFFERSIZE)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
 		if(*begin == '\n')
-			fputs("\n",stdout);
-		fputs(lineprefix[i].before,stdout);
-		for(j = 0, p += l; p != end; p++, j++) {
-			ADDC(buffer,j) = *p;
-			if(*p == '\n') {
-				if(strncmp(lineprefix[i].search,p+1,l) != 0)
+			fputs("\n", stdout);
+		fputs(lineprefix[i].before, stdout);
+		for(j = 0, p += l; p < end; p++, j++) {
+			ADDC(buffer, j) = *p;
+			if(*p == '\n' && p + l < end) {
+				if(strncmp(lineprefix[i].search, p + 1, l) != 0)
 					break;
 				p += l;
 			}
 		}
-		ADDC(buffer,j) = '\0';
+		ADDC(buffer, j) = '\0';
 		if(lineprefix[i].process)
-			process(buffer,buffer+strlen(buffer), lineprefix[i].process >= 2);
+			process(buffer, buffer + strlen(buffer), lineprefix[i].process >= 2);
 		else
-			hprint(buffer,buffer+strlen(buffer));
+			hprint(buffer, buffer + strlen(buffer));
 		puts(lineprefix[i].after);
 		free(buffer);
 		return -(p - begin);
@@ -209,15 +219,15 @@ dolink(const char *begin, const char *end, int newblock) {
 
 	if(*begin == '[')
 		img = 0;
-	else if(strncmp(begin,"![",2) == 0)
+	else if(strncmp(begin, "![", 2) == 0)
 		img = 1;
 	else
 		return 0;
 	p = desc = begin + 1 + img;
 	if(!(p = strstr(desc, "](")) || p > end)
 		return 0;
-	for(q = strstr(desc, "!["); q && q < end && q < p; q = strstr(q+1,"!["))
-		if(!(p = strstr(p+1, "](")) || p > end)
+	for(q = strstr(desc, "!["); q && q < end && q < p; q = strstr(q + 1, "!["))
+		if(!(p = strstr(p + 1, "](")) || p > end)
 			return 0;
 	descend = p;
 	link = p + 2;
@@ -225,18 +235,18 @@ dolink(const char *begin, const char *end, int newblock) {
 		return 0;
 	linkend = p;
 	if(img) {
-		fputs("<img src=\"",stdout);
-		hprint(link,linkend);
-		fputs("\" alt=\"",stdout);
-		hprint(desc,descend);
-		fputs("\" />",stdout);
+		fputs("<img src=\"", stdout);
+		hprint(link, linkend);
+		fputs("\" alt=\"", stdout);
+		hprint(desc, descend);
+		fputs("\" />", stdout);
 	}
 	else {
-		fputs("<a href=\"",stdout);
-		hprint(link,linkend);
-		fputs("\">",stdout);
-		process(desc,descend,0);
-		fputs("</a>",stdout);
+		fputs("<a href=\"", stdout);
+		hprint(link, linkend);
+		fputs("\">", stdout);
+		process(desc, descend, 0);
+		fputs("</a>", stdout);
 	}
 	return p + 1 - begin;
 }
@@ -259,27 +269,29 @@ dolist(const char *begin, const char *end, int newblock) {
 		ul = 1;
 	else {
 		ul = 0;
-		for(; *p && p != end && *p >= '0' && *p <= '9';p++);
-		if(!*p || p[0] != '.')
+		for(; p < end && *p >= '0' && *p <= '9'; p++);
+		if(p >= end || *p != '.')
 			return 0;
 	}
-	if(p[1] != ' ' && p[1] != '\t')
+	p++;
+	if(p >= end || !(*p == ' ' || *p == '\t'))
 		return 0;
-	for(p++; *p && p != end && (*p == ' ' || *p == '\t'); p++);
+	for(p++; p != end && (*p == ' ' || *p == '\t'); p++);
 	indent = p - q;
 	if(!(buffer = malloc(BUFFERSIZE)))
 		eprint("Malloc failed.");
 	if(!newblock)
 		putchar('\n');
-	fputs(ul ? "<ul>\n" : "<ol>\n",stdout);
+	fputs(ul ? "<ul>\n" : "<ol>\n", stdout);
 	run = 1;
-	for(i = 0; p < end && *p && run; p++) {
-		buffer[0] = '\0';
-		for(i = 0; *p && p < end && run; p++,i++) {
+	for(; p < end && run; p++) {
+		for(i = 0; p < end && run; p++, i++) {
 			if(*p == '\n') {
-				if(p[1] == '\n') {
+				if(p + 1 >= end)
+					break;
+				else if(p[1] == '\n') {
 					p++;
-					ADDC(buffer,i) = '\n';
+					ADDC(buffer, i) = '\n';
 					i++;
 					run = 0;
 					isblock++;
@@ -289,15 +301,19 @@ dolist(const char *begin, const char *end, int newblock) {
 				if(ul && (*q == '-' || *q == '*' || *q == '+'))
 					j = 1;
 				else if(!ul) {
-					for(; q[j] >= '0' && q[j] <= '9' && j < indent; j++);
+					for(; q + j != end && q[j] >= '0' && q[j] <= '9' && j < indent; j++);
+					if(q + j == end)
+						break;
 					if(j > 0 && q[j] == '.')
 						j++;
 					else
 						j = 0;
 				}
-				for(;(q[j] == ' ' || *q == '\t') && j < indent; j++);
+				/* TODO: do '\t' properly */
+				if(q + indent < end)
+					for(; (q[j] == ' ' || q[j] == '\t') && j < indent; j++);
 				if(j == indent) {
-					ADDC(buffer,i) = '\n';
+					ADDC(buffer, i) = '\n';
 					i++;
 					p += indent;
 					run = 1;
@@ -307,14 +323,14 @@ dolist(const char *begin, const char *end, int newblock) {
 						break;
 				}
 			}
-			ADDC(buffer,i) = *p;
+			ADDC(buffer, i) = *p;
 		}
-		ADDC(buffer,i) = '\0';
-		fputs("<li>",stdout);
-		process(buffer,buffer+i,isblock > 1 || (isblock == 1 && run));
-		fputs("</li>\n",stdout);
+		ADDC(buffer, i) = '\0';
+		fputs("<li>", stdout);
+		process(buffer, buffer + i, isblock > 1 || (isblock == 1 && run));
+		fputs("</li>\n", stdout);
 	}
-	fputs(ul ? "</ul>\n" : "</ol>\n",stdout);
+	fputs(ul ? "</ul>\n" : "</ol>\n", stdout);
 	free(buffer);
 	p--;
 	while(*(--p) == '\n');
@@ -323,20 +339,20 @@ dolist(const char *begin, const char *end, int newblock) {
 
 unsigned int
 doparagraph(const char *begin, const char *end, int newblock) {
-	const char *p, *q;
+	const char *p;
 
 	if(!newblock)
 		return 0;
-	p = begin;
-	q = strstr(p, "\n\n");
-	if(!q || q > end)
-		q = end;
-	if(q - begin <= 1)
+	/* TODO: can go past end */
+	p = strstr(begin, "\n\n");
+	if(!p || p > end)
+		p = end;
+	if(p - begin <= 1)
 		return 0;
-	fputs("<p>\n",stdout);
-	process(p,q,0);
-	fputs("</p>\n",stdout);
-	return -(q - begin);
+	fputs("<p>\n", stdout);
+	process(begin, p, 0);
+	fputs("</p>\n", stdout);
+	return -(p - begin);
 }
 
 unsigned int
@@ -344,13 +360,13 @@ doreplace(const char *begin, const char *end, int newblock) {
 	unsigned int i, l;
 
 	for(i = 0; i < LENGTH(insert); i++)
-		if(strncmp(insert[i][0],begin,strlen(insert[i][0])) == 0)
+		if(strncmp(insert[i][0], begin, strlen(insert[i][0])) == 0)
 			fputs(insert[i][1], stdout);
 	for(i = 0; i < LENGTH(replace); i++) {
 		l = strlen(replace[i][0]);
 		if(end - begin < l)
 			continue;
-		if(strncmp(replace[i][0],begin,l) == 0) {
+		if(strncmp(replace[i][0], begin, l) == 0) {
 			fputs(replace[i][1], stdout);
 			return l;
 		}
@@ -365,8 +381,12 @@ doshortlink(const char *begin, const char *end, int newblock) {
 
 	if(*begin != '<')
 		return 0;
-	for(p = begin+1; p && p != end && !strchr(" \t\n",*p); p++) {
+	for(p = begin + 1; p != end; p++) {
 		switch(*p) {
+		case ' ':
+		case '\t':
+		case '\n':
+			return 0;
 		case '#':
 		case ':':
 			ismail = -1;
@@ -378,24 +398,22 @@ doshortlink(const char *begin, const char *end, int newblock) {
 		case '>':
 			if(ismail == 0)
 				return 0;
-			fputs("<a href=\"",stdout);
+			fputs("<a href=\"", stdout);
 			if(ismail == 1) {
 				/* mailto: */
-				fputs("&#x6D;&#x61;i&#x6C;&#x74;&#x6F;:",stdout);
-				for(c = begin+1; *c != '>'; c++) {
-					printf("&#%u;",*c);
-				}
-				fputs("\">",stdout);
-				for(c = begin+1; *c != '>'; c++) {
-					printf("&#%u;",*c);
-				}
+				fputs("&#x6D;&#x61;i&#x6C;&#x74;&#x6F;:", stdout);
+				for(c = begin + 1; *c != '>'; c++)
+					printf("&#%u;", *c);
+				fputs("\">", stdout);
+				for(c = begin + 1; *c != '>'; c++)
+					printf("&#%u;", *c);
 			}
 			else {
-				hprint(begin+1,p);
-				fputs("\">",stdout);
-				hprint(begin+1,p);
+				hprint(begin + 1, p);
+				fputs("\">", stdout);
+				hprint(begin + 1, p);
 			}
-			fputs("</a>",stdout);
+			fputs("</a>", stdout);
 			return p - begin + 1;
 		}
 	}
@@ -404,29 +422,29 @@ doshortlink(const char *begin, const char *end, int newblock) {
 
 unsigned int
 dosurround(const char *begin, const char *end, int newblock) {
-	unsigned int i,l;
+	unsigned int i, l;
 	const char *p, *ps, *q, *qend;
 
 	for(i = 0; i < LENGTH(surround); i++) {
 		l = strlen(surround[i].search);
-		if(end - begin < l || strncmp(begin,surround[i].search,l) != 0)
+		if(end - begin < l || strncmp(begin, surround[i].search, l) != 0)
 			continue;
 		for(ps = surround[i].search; *ps == '\n'; ps++);
 		l = strlen(ps);
 		p = begin + strlen(surround[i].search) - 1;
 		do {
-			p = strstr(p+1, ps);
+			p = strstr(p + 1, ps);
 		} while(p && p[-1] == '\\');
-		if(!p || p > end)
+		if(!p || p == end)
 			continue;
-		fputs(surround[i].before,stdout);
+		fputs(surround[i].before, stdout);
 		for(q = begin + strlen(surround[i].search); *q == ' '; q++);
 		for(qend = p-1; *qend == ' '; qend--);
 		if(surround[i].process)
-			process(q, qend+1,0);
+			process(q, qend + 1, 0);
 		else
-			hprint(q, qend+1);
-		fputs(surround[i].after,stdout);
+			hprint(q, qend + 1);
+		fputs(surround[i].after, stdout);
 		return p - begin + l;
 	}
 	return 0;
@@ -440,19 +458,19 @@ dounderline(const char *begin, const char *end, int newblock) {
 	if(!newblock)
 		return 0;
 	p = begin;
-	for(l = 0; p[l] != '\n' && p[l] && p+l != end; l++);
+	for(l = 0; p + l != end && p[l] != '\n'; l++);
 	p += l + 1;
 	if(l == 0)
 		return 0;
 	for(i = 0; i < LENGTH(underline); i++) {
-		for(j = 0; p[j] != '\n' && p[j] == underline[i].search[0] && p+j != end; j++);
+		for(j = 0; p + j != end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
 		if(j >= l) {
-			fputs(underline[i].before,stdout);
+			fputs(underline[i].before, stdout);
 			if(underline[i].process)
 				process(begin, begin + l, 0);
 			else
 				hprint(begin, begin + l);
-			fputs(underline[i].after,stdout);
+			fputs(underline[i].after, stdout);
 			return -(j + p - begin);
 		}
 	}
@@ -463,15 +481,15 @@ void
 hprint(const char *begin, const char *end) {
 	const char *p;
 
-	for(p = begin; p && p != end; p++) {
+	for(p = begin; p != end; p++) {
 		if(*p == '&')
-			fputs("&amp;",stdout);
+			fputs("&amp;", stdout);
 		else if(*p == '"')
-			fputs("&quot;",stdout);
+			fputs("&quot;", stdout);
 		else if(*p == '>')
-			fputs("&gt;",stdout);
+			fputs("&gt;", stdout);
 		else if(*p == '<')
-			fputs("&lt;",stdout);
+			fputs("&lt;", stdout);
 		else
 			putchar(*p);
 	}
@@ -483,24 +501,26 @@ process(const char *begin, const char *end, int newblock) {
 	int affected;
 	unsigned int i;
 	
-	for(p = begin; *p && p < end;) {
+	for(p = begin; p != end;) {
 		if(newblock)
-			while(*p == '\n') p++;
+			while(*p == '\n')
+				if (++p == end)
+					return;
 		affected = 0;
 		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
 			affected = parsers[i](p, end, newblock);
 		p += abs(affected);
 		if(!affected) {
 			if(nohtml)
-				hprint(p,p+1);
+				hprint(p, p+1);
 			else
 				putchar(*p);
 			p++;
 		}
-		for(q = p; *q == '\n' && q < end; q++);
+		for(q = p; q != end && *q == '\n'; q++);
 		if(q == end)
 			return;
-		else if(p[0] == '\n' && p[1] == '\n')
+		else if(p[0] == '\n' && p + 1 != end && p[1] == '\n')
 			newblock = 1;
 		else
 			newblock = affected < 0;
@@ -509,8 +529,9 @@ process(const char *begin, const char *end, int newblock) {
 
 int
 main(int argc, char *argv[]) {
-	char *p, *buffer;
-	int s;
+	char *buffer;
+	int s, len;
+	unsigned int bsize;
 
 	source = stdin;
 	if(argc > 1 && strcmp("-v", argv[1]) == 0)
@@ -522,21 +543,20 @@ main(int argc, char *argv[]) {
 	if(argc > 1 + nohtml && strcmp("-", argv[1 + nohtml]) != 0
 			&& !(source = fopen(argv[1 + nohtml],"r")))
 		eprint("Cannot open file `%s`\n",argv[1 + nohtml]);
-	if(!(buffer = malloc(BUFFERSIZE)))
+	bsize = 2 * BUFFERSIZE;
+	if(!(buffer = malloc(bsize)))
 		eprint("Malloc failed.");
-	bsize = BUFFERSIZE;
-	buffer[0] = '\0';
-	p = buffer+strlen(buffer);
-	while((s = fread(p, sizeof(char),BUFFERSIZE, source))) {
-		p += s;
-		*p = '\0';
-		if(BUFFERSIZE + strlen(buffer) > bsize) {
+	len = 0;
+	while((s = fread(buffer + len, 1, BUFFERSIZE, source))) {
+		len += s;
+		if(BUFFERSIZE + len + 1 > bsize) {    
 			bsize += BUFFERSIZE;
 			if(!(buffer = realloc(buffer, bsize)))
 				eprint("Malloc failed.");
 		}
 	}
-	process(buffer,buffer+strlen(buffer),1);
+	buffer[len] = '\0';
+	process(buffer, buffer + len, 1);
 	fclose(source);
 	free(buffer);
 	return EXIT_SUCCESS;
