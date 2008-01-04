@@ -50,8 +50,8 @@ void hprint(const char *begin, const char *end);	/* escapes HTML and prints it t
 void process(const char *begin, const char *end, int isblock);
 							/* Processes range between begin and end. */
 
-Parser parsers[] = { dounderline, dohtml, dolineprefix, dolist, doparagraph,
-	dogtlt, dosurround, dolink, doshortlink, doamp, doreplace };
+Parser parsers[] = { doreplace, dounderline, dohtml, dolineprefix, dolist, doparagraph,
+	dogtlt, dosurround, dolink, doshortlink, doamp };
 							/* list of parsers */
 FILE *source;
 unsigned int nohtml = 0;
@@ -79,16 +79,6 @@ struct Tag surround[] = {
 	{ "_",		1,	"<em>",		"</em>" },
 };
 char * replace[][2] = {
-	{ "\n- - -\n",	"\n<hr />\n" },
-	{ "\n- - - \n",	"\n<hr />\n" },
-	{ " ######\n",	"\n" },
-	{ " #####\n",	"\n" },
-	{ " ####\n",	"\n" },
-	{ " ###\n",	"\n" },
-	{ " ##\n",	"\n" },
-	{ " #\n",	"\n" },
-	{ " >",		"&gt;" },
-	{ "< ",		"&lt;" },
 	{ "\\\\",	"\\" },
 	{ "\\`",	"`" },
 	{ "\\*",	"*" },
@@ -126,7 +116,6 @@ doamp(const char *begin, const char *end, int newblock) {
 	if(*begin != '&')
 		return 0;
 	if(!nohtml) {
-		/* TODO: end ? */
 		for(p = begin + 1; p != end && !strchr("; \\\n\t", *p); p++);
 		if(p == end || *p == ';')
 			return 0;
@@ -144,7 +133,6 @@ unsigned int
 dohtml(const char *begin, const char *end, int newblock) {
 	const char *p, *tag, *tagend;
 
-	/* TODO: end */
 	if(nohtml || !newblock || *begin == '\n' || begin + 2 >= end)
 		return 0;
 	p = begin;
@@ -309,7 +297,6 @@ dolist(const char *begin, const char *end, int newblock) {
 					else
 						j = 0;
 				}
-				/* TODO: do '\t' properly */
 				if(q + indent < end)
 					for(; (q[j] == ' ' || q[j] == '\t') && j < indent; j++);
 				if(j == indent) {
@@ -343,7 +330,6 @@ doparagraph(const char *begin, const char *end, int newblock) {
 
 	if(!newblock)
 		return 0;
-	/* TODO: can go past end */
 	p = strstr(begin, "\n\n");
 	if(!p || p > end)
 		p = end;
