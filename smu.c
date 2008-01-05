@@ -65,6 +65,7 @@ struct Tag lineprefix[] = {
 	{ "### ",	1,	"<h3>",		"</h3>" },
 	{ "## ",	1,	"<h2>",		"</h2>" },
 	{ "# ",		1,	"<h1>",		"</h1>" },
+	{ "- - -\n",	1,	"<hr />",	""},
 };
 struct Tag underline[] = {
 	{ "=",		1,	"<h1>",		"</h1>\n" },
@@ -275,7 +276,7 @@ dolist(const char *begin, const char *end, int newblock) {
 	for(; p < end && run; p++) {
 		for(i = 0; p < end && run; p++, i++) {
 			if(*p == '\n') {
-				if(p + 1 >= end)
+				if(p + 1 == end)
 					break;
 				else if(p[1] == '\n') {
 					p++;
@@ -498,7 +499,7 @@ process(const char *begin, const char *end, int newblock) {
 		p += abs(affected);
 		if(!affected) {
 			if(nohtml)
-				hprint(p, p+1);
+				hprint(p, p + 1);
 			else
 				putchar(*p);
 			p++;
