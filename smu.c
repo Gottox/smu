@@ -517,8 +517,8 @@ process(const char *begin, const char *end, int newblock) {
 int
 main(int argc, char *argv[]) {
 	char *buffer;
-	int s, len;
-	unsigned int bsize;
+	int s;
+	unsigned long len, bsize;
 
 	source = stdin;
 	if(argc > 1 && strcmp("-v", argv[1]) == 0)
