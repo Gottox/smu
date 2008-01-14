@@ -50,8 +50,8 @@ void hprint(const char *begin, const char *end);	/* escapes HTML and prints it t
 void process(const char *begin, const char *end, int isblock);
 							/* Processes range between begin and end. */
 
-Parser parsers[] = { doreplace, dounderline, dohtml, dolineprefix, dolist, doparagraph,
-	dogtlt, dosurround, dolink, doshortlink, doamp };
+Parser parsers[] = { dounderline, dohtml, dolineprefix, dolist, doparagraph,
+	dogtlt, dosurround, dolink, doshortlink, doamp, doreplace };
 							/* list of parsers */
 FILE *source;
 unsigned int nohtml = 0;
@@ -175,12 +175,16 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 			continue;
 		if(strncmp(lineprefix[i].search, p, l))
 			continue;
+		if(*begin == '\n')
+			fputc('\n', stdout);
+		fputs(lineprefix[i].before, stdout);
+		if(lineprefix[i].search[l-1] == '\n') {
+			fputc('\n', stdout);
+			return l;
+		}
 		if(!(buffer = malloc(BUFFERSIZE)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
-		if(*begin == '\n')
-			fputs("\n", stdout);
-		fputs(lineprefix[i].before, stdout);
 		for(j = 0, p += l; p < end; p++, j++) {
 			ADDC(buffer, j) = *p;
 			if(*p == '\n' && p + l < end) {
