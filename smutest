@@ -1,0 +1,59 @@
+                                                                     
+                                                                     
+                                                                     
+                                             
+smu test
+========
+
+simple tests
+------------
+
+first paragraph.
+testing surround: _emph_ then **strong** and `code`.
+
+horizontal rule:
+
+- - -
+
+
+blocks and entities
+-------------------
+
+preformatted block:
+	 ---
+	 \  |\ /| |  |
+	  \ |   | |__|
+	---
+
+quoted text:
+> When in doubt,
+> use brute force.
+
+list:
+* Make each program do one thing well.
+* Expect the output of every program to become the input to another,
+as yet unknown, program.
+* Design and build software, even operating systems, to be tried early,
+ideally within weeks.
+* Use tools in preference to unskilled help to lighten a programming task.
+
+list in list:
+* a
+  * b
+    1. c
+    2. d
+  * e
+* f
+
+entity: &, <, >
+
+code:
+	int powerof2(unsigned int n) {
+		return !((n - 1) & n) && n > 0;
+	}
+
+links
+-----
+
+[suckless](http://suckless.org)
+
