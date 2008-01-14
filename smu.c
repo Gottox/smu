@@ -127,6 +127,23 @@ doamp(const char *begin, const char *end, int newblock) {
 
 unsigned int
 dogtlt(const char *begin, const char *end, int newblock) {
+	int brpos;
+	char c;
+
+	if(nohtml || begin + 1 >= end)
+		return 0;
+	brpos = begin[1] == '>';
+	if(!brpos && *begin != '<')
+		return 0;
+	c = begin[brpos ? 0 : 1];
+	if(!brpos && (c < 'a' || c > 'z') && (c < 'A' || c > 'Z')) {
+		fputs("&lt;",stdout);
+		return 1;
+	}
+	else if(brpos && (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && !strchr("/\"'",c)) {
+		printf("%c&gt;",c);
+		return 2;
+	}
 	return 0;
 }
 
