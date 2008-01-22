@@ -1,5 +1,5 @@
 /* smu - simple markup
- * Copyright (C) <2007> Enno boland <g s01 de>
+ * Copyright (C) <2007, 2008> Enno boland <g s01 de>
  *
  * See LICENSE for further informations
  */

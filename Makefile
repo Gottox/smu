@@ -1,5 +1,5 @@
 # smu - simple markup
-# (c) 2007 Enno Boland
+# (c) 2007, 2008 Enno Boland
 
 include config.mk
 
