@@ -74,10 +74,12 @@ struct Tag underline[] = {
 struct Tag surround[] = {
 	{ "``",		0,	"<code>",	"</code>" },
 	{ "`",		0,	"<code>",	"</code>" },
+	{ "___",	1,	"<strong><em>",	"</em></strong>" },
+	{ "***",	1,	"<strong><em>",	"</em></strong>" },
 	{ "__",		1,	"<strong>",	"</strong>" },
 	{ "**",		1,	"<strong>",	"</strong>" },
-	{ "*",		1,	"<em>",		"</em>" },
 	{ "_",		1,	"<em>",		"</em>" },
+	{ "*",		1,	"<em>",		"</em>" },
 };
 char * replace[][2] = {
 	{ "\\\\",	"\\" },
