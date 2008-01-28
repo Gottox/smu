@@ -433,29 +433,28 @@ doshortlink(const char *begin, const char *end, int newblock) {
 int
 dosurround(const char *begin, const char *end, int newblock) {
 	unsigned int i, l;
-	const char *p, *ps, *q, *qend;
+	const char *p, *start, *stop;
 
 	for(i = 0; i < LENGTH(surround); i++) {
 		l = strlen(surround[i].search);
-		if(end - begin < l || strncmp(begin, surround[i].search, l) != 0)
+		if(end - begin < 2*l || strncmp(begin, surround[i].search, l) != 0)
 			continue;
-		for(ps = surround[i].search; *ps == '\n'; ps++);
-		l = strlen(ps);
-		p = begin + strlen(surround[i].search) - 1;
+		start = begin + l;
+		p = start - 1;
 		do {
-			p = strstr(p + 1, ps);
+			p = strstr(p + 1, surround[i].search);
 		} while(p && p[-1] == '\\');
-		if(!p || p == end)
+		if(!p || p >= end)
 			continue;
 		fputs(surround[i].before, stdout);
-		for(q = begin + strlen(surround[i].search); *q == ' '; q++);
-		for(qend = p-1; *qend == ' '; qend--);
+		if(!(stop = strstr(start, surround[i].search)) || stop >= end)
+			continue;
 		if(surround[i].process)
-			process(q, qend + 1, 0);
+			process(start, stop, 0);
 		else
-			hprint(q, qend + 1);
+			hprint(start, stop);
 		fputs(surround[i].after, stdout);
-		return p - begin + l;
+		return stop - begin + l;
 	}
 	return 0;
 }

@@ -22,21 +22,31 @@ Inline pattern
 
 There are several pattern you can use to highlight your text:
 
- * Emphasis
-   * Surround your text with `*` or `_` to get *emphasis* text:
-     	This *is* cool.
-     	This _is_ cool, too.
-   * Surround your text with `**` or `__` to get **strong** text:
-     	This **is** cool.
-     	This __is__ cool, too.
- * inline Code
+* Emphasis
+  * Surround your text with `*` or `_` to get *emphasis* text:
+    	This *is* cool.
+    	This _is_ cool, too.
+  * Surround your text with `**` or `__` to get **strong** text:
+    	This **is** cool.
+    	This __is__ cool, too.
+  * Surround your text with `***` or `___` to get ***strong and emphasis*** text:
+    	This ***is*** cool.
+    	This ___is___ cool, too.
+  * But this example won't work as expected:
+    	***Hello** you*
+    This is a wontfix bug because it would make the source to complex.
+    Use this instead:
+    	***Hello*** *you*
 
-   You can produce inline code with surrounding `\`` or `\`\``
-   	Use `rm -rf /` if you're a N00b.
+* inline Code
 
-   	Use ``rm -rf /`` if you're a N00b.
+  You can produce inline code with surrounding `\`` or `\`\``
 
-   `\`\`` makes it possible to use Backticks without backslashing them.
+  	Use `rm -rf /` if you're a N00b.
+
+  	Use ``rm -rf /`` if you're a N00b.
+
+  `\`\`ABC\`\`` makes it possible to use Backticks without backslashing them.
 
 
 Titles
@@ -164,27 +174,28 @@ block.
 Other interesting stuff
 -----------------------
 
- * to insert a horizontal rule simple add `- - -` into an empty line:
+* to insert a horizontal rule simple add `- - -` into an empty line:
 
-   	Hello
-   	- - -
-   	Hello2
+  	Hello
+  	- - -
+  	Hello2
 
-   Result:
-   	<p>
-   	Hello
-   	<hr />
-   	
-   	Hello2</p>
- * You can escape the following pattern to avoid them from being interpreted:
-   `` \ ` * _ { } [ ] ( ) # + - . ! ``
+  Result:
+  	<p>
+  	Hello
+  	<hr />
+  	
+  	Hello2</p>
+* You can escape the following pattern to avoid them from being interpreted:
 
- * To force a linebreak simple add two spaces to the end of the line:
+  	\ ` * _ { } [ ] ( ) # + - . !
 
-   	No linebreak
-   	here.
-   	But here is  
-   	one.
+* To force a linebreak simple add two spaces to the end of the line:
+
+  	No linebreak
+  	here.
+  	But here is  
+  	one.
 
 embed HTML
 ----------
