@@ -15,7 +15,7 @@
 	{ b = realloc(b, (i + BUFFERSIZE) * sizeof(b)); if(!b) eprint("Malloc failed."); } b[i]
 
 
-typedef unsigned int (*Parser)(const char *, const char *, int);
+typedef int (*Parser)(const char *, const char *, int);
 struct Tag {
 	char *search;
 	int process;
@@ -24,27 +24,27 @@ struct Tag {
 
 
 void eprint(const char *format, ...);			/* Prints error and exits */
-unsigned int doamp(const char *begin, const char *end, int newblock);
+int doamp(const char *begin, const char *end, int newblock);
 							/* Parser for & */
-unsigned int dogtlt(const char *begin, const char *end, int newblock);
+int dogtlt(const char *begin, const char *end, int newblock);
 							/* Parser for < and > */
-unsigned int dohtml(const char *begin, const char *end, int newblock);
+int dohtml(const char *begin, const char *end, int newblock);
 							/* Parser for html */
-unsigned int dolineprefix(const char *begin, const char *end, int newblock);
+int dolineprefix(const char *begin, const char *end, int newblock);
 							/* Parser for line prefix tags */
-unsigned int dolink(const char *begin, const char *end, int newblock);
+int dolink(const char *begin, const char *end, int newblock);
 							/* Parser for links and images */
-unsigned int dolist(const char *begin, const char *end, int newblock);
+int dolist(const char *begin, const char *end, int newblock);
 							/* Parser for lists */
-unsigned int doparagraph(const char *begin, const char *end, int newblock);
+int doparagraph(const char *begin, const char *end, int newblock);
 							/* Parser for paragraphs */
-unsigned int doreplace(const char *begin, const char *end, int newblock);
+int doreplace(const char *begin, const char *end, int newblock);
 							/* Parser for simple replaces */
-unsigned int doshortlink(const char *begin, const char *end, int newblock);
+int doshortlink(const char *begin, const char *end, int newblock);
 							/* Parser for links and images */
-unsigned int dosurround(const char *begin, const char *end, int newblock);
+int dosurround(const char *begin, const char *end, int newblock);
 							/* Parser for surrounding tags */
-unsigned int dounderline(const char *begin, const char *end, int newblock);
+int dounderline(const char *begin, const char *end, int newblock);
 							/* Parser for underline tags */
 void hprint(const char *begin, const char *end);	/* escapes HTML and prints it to stdout*/
 void process(const char *begin, const char *end, int isblock);
@@ -112,7 +112,7 @@ eprint(const char *format, ...) {
 	exit(EXIT_FAILURE);
 }
 
-unsigned int
+int
 doamp(const char *begin, const char *end, int newblock) {
 	const char *p;
 
@@ -127,7 +127,7 @@ doamp(const char *begin, const char *end, int newblock) {
 	return 1;
 }
 
-unsigned int
+int
 dogtlt(const char *begin, const char *end, int newblock) {
 	int brpos;
 	char c;
@@ -149,7 +149,7 @@ dogtlt(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
-unsigned int
+int
 dohtml(const char *begin, const char *end, int newblock) {
 	const char *p, *tag, *tagend;
 
@@ -176,7 +176,7 @@ dohtml(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
-unsigned int
+int
 dolineprefix(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, l;
 	char *buffer;
@@ -224,7 +224,7 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
-unsigned int
+int
 dolink(const char *begin, const char *end, int newblock) {
 	int img;
 	const char *desc, *link, *p, *q, *descend, *linkend;
@@ -263,7 +263,7 @@ dolink(const char *begin, const char *end, int newblock) {
 	return p + 1 - begin;
 }
 
-unsigned int
+int
 dolist(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, indent, run, ul, isblock;
 	const char *p, *q;
@@ -348,7 +348,7 @@ dolist(const char *begin, const char *end, int newblock) {
 	return -(p - begin + 1);
 }
 
-unsigned int
+int
 doparagraph(const char *begin, const char *end, int newblock) {
 	const char *p;
 
@@ -365,7 +365,7 @@ doparagraph(const char *begin, const char *end, int newblock) {
 	return -(p - begin);
 }
 
-unsigned int
+int
 doreplace(const char *begin, const char *end, int newblock) {
 	unsigned int i, l;
 
@@ -384,7 +384,7 @@ doreplace(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
-unsigned int
+int
 doshortlink(const char *begin, const char *end, int newblock) {
 	const char *p, *c;
 	int ismail = 0;
@@ -430,7 +430,7 @@ doshortlink(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
-unsigned int
+int
 dosurround(const char *begin, const char *end, int newblock) {
 	unsigned int i, l;
 	const char *p, *ps, *q, *qend;
@@ -460,7 +460,7 @@ dosurround(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
-unsigned int
+int
 dounderline(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, l;
 	const char *p;
