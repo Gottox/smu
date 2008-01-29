@@ -16,10 +16,9 @@ blocks and entities
 -------------------
 
 preformatted block:
-	 ---
-	 \  |\ /| |  |
-	  \ |   | |__|
-	---
+	.'''' .'.'. |  |
+	 '''. | ' | |  |
+	''''  '   '  ""
 
 quoted text:
 > When in doubt,
