@@ -543,7 +543,7 @@ main(int argc, char *argv[]) {
 
 	source = stdin;
 	if(argc > 1 && strcmp("-v", argv[1]) == 0)
-		eprint("markdown in C %s (C) Enno Boland\n",VERSION);
+		eprint("simple markup %s (C) Enno Boland\n",VERSION);
 	else if(argc > 1 && strcmp("-h", argv[1]) == 0)
 		eprint("Usage %s [-n] [file]\n -n escape html strictly\n",argv[0]);
 	if(argc > 1 && strcmp("-n", argv[1]) == 0)
