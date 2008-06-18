@@ -18,3 +18,4 @@ LDFLAGS = ${LIBS}
 
 # compiler
 CC = cc
+AR = ar crsv

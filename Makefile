@@ -1,12 +1,14 @@
-# smu - simple markup
+# libsmu - simple markup
 # (c) 2007, 2008 Enno Boland
 
 include config.mk
 
-SRC = smu.c
-OBJ = ${SRC:.c=.o}
+SRC    = smu.c
+LIBSRC = libsmu.c
+OBJ    = ${SRC:.c=.o}
+LIBOBJ = ${LIBSRC:.c=.o}
 
-all: options smu
+all: options libsmu.a smu
 
 options:
 	@echo smu build options:
@@ -20,19 +22,23 @@ options:
 
 ${OBJ}: config.mk
 
+libsmu.a: ${LIBOBJ}
+	@echo AR $@
+	@${AR} $@ ${LIBOBJ}
+
 smu: ${OBJ}
 	@echo LD $@
-	@${CC} -o $@ ${OBJ} ${LDFLAGS}
+	@${CC} -o $@ ${OBJ} ${LDFLAGS} -L. -lsmu
 
 clean:
 	@echo cleaning
-	@rm -f smu ${OBJ} smu-${VERSION}.tar.gz
+	@rm -f smu ${OBJ} ${LIBOBJ} smu-${VERSION}.tar.gz
 
 dist: clean
 	@echo creating dist tarball
 	@mkdir -p smu-${VERSION}
 	@cp -R LICENSE Makefile config.mk \
-		smu.1 ${SRC} smu-${VERSION}
+		smu.1 ${SRC} ${LIBSRC} smu.h smu-${VERSION}
 	@tar -cf smu-${VERSION}.tar smu-${VERSION}
 	@gzip smu-${VERSION}.tar
 	@rm -rf smu-${VERSION}
