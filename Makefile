@@ -4,11 +4,9 @@
 include config.mk
 
 SRC    = smu.c
-LIBSRC = libsmu.c
 OBJ    = ${SRC:.c=.o}
-LIBOBJ = ${LIBSRC:.c=.o}
 
-all: options libsmu.a smu
+all: options smu
 
 options:
 	@echo smu build options:
@@ -22,13 +20,9 @@ options:
 
 ${OBJ}: config.mk
 
-libsmu.a: ${LIBOBJ}
-	@echo AR $@
-	@${AR} $@ ${LIBOBJ}
-
 smu: ${OBJ}
 	@echo LD $@
-	@${CC} -o $@ ${OBJ} ${LDFLAGS} -L. -lsmu
+	@${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	@echo cleaning
@@ -37,8 +31,7 @@ clean:
 dist: clean
 	@echo creating dist tarball
 	@mkdir -p smu-${VERSION}
-	@cp -R LICENSE Makefile config.mk \
-		smu.1 ${SRC} ${LIBSRC} smu.h smu-${VERSION}
+	@cp -R LICENSE Makefile config.mk smu.1 ${SRC} smu-${VERSION}
 	@tar -cf smu-${VERSION}.tar smu-${VERSION}
 	@gzip smu-${VERSION}.tar
 	@rm -rf smu-${VERSION}
