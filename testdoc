@@ -52,3 +52,9 @@ links
 
 [suckless](http://suckless.org)
 
+inline html
+-----------
+
+<center>
+	ABC
+</center>
