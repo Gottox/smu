@@ -142,7 +142,7 @@ int
 docomment(const char *begin, const char *end, int newblock) {
 	char *p;
 
-	if(strncmp("<!--", begin, 4))
+	if(nohtml || strncmp("<!--", begin, 4))
 		return 0;
 	p = strstr(begin, "-->");
 	if(!p || p + 3 >= end)
