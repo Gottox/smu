@@ -31,6 +31,7 @@ static int doreplace(const char *begin, const char *end, int newblock);   /* Par
 static int doshortlink(const char *begin, const char *end, int newblock); /* Parser for links and images */
 static int dosurround(const char *begin, const char *end, int newblock);  /* Parser for surrounding tags */
 static int dounderline(const char *begin, const char *end, int newblock); /* Parser for underline tags */
+static void *ereallocz(void *p, size_t size);
 static void hprint(const char *begin, const char *end);                   /* escapes HTML and prints it to output */
 static void process(const char *begin, const char *end, int isblock);     /* Processes range between begin and end. */
 
@@ -274,7 +275,7 @@ int
 dolist(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, indent, run, ul, isblock;
 	const char *p, *q;
-	char *buffer;
+	char *buffer = NULL;
 
 	isblock = 0;
 	if(newblock)
@@ -297,8 +298,7 @@ dolist(const char *begin, const char *end, int newblock) {
 		return 0;
 	for(p++; p != end && (*p == ' ' || *p == '\t'); p++);
 	indent = p - q;
-	if(!(buffer = malloc(BUFSIZ)))
-		eprint("Malloc failed.");
+	buffer = ereallocz(buffer, BUFSIZ);
 	if(!newblock)
 		fputc('\n', stdout);
 	fputs(ul ? "<ul>\n" : "<ol>\n", stdout);
@@ -492,6 +492,19 @@ dounderline(const char *begin, const char *end, int newblock) {
 	return 0;
 }
 
+void *
+ereallocz(void *p, size_t size) {
+	void *res;
+	if(p)
+		res = realloc(p , size);
+	else
+		res = calloc(1, size);
+
+	if(!res)
+		eprint("fatal: could not malloc() %u bytes\n", size);
+	return res;
+}
+
 void
 hprint(const char *begin, const char *end) {
 	const char *p;
@@ -516,13 +529,13 @@ process(const char *begin, const char *end, int newblock) {
 	int affected;
 	unsigned int i;
 	
-	for(p = begin; p != end;) {
+	for(p = begin; p < end;) {
 		if(newblock)
 			while(*p == '\n')
 				if(++p == end)
 					return;
 		affected = 0;
-		for(i = 0; i < LENGTH(parsers) && affected == 0; i++)
+		for(i = 0; i < LENGTH(parsers) && !affected; i++)
 			affected = parsers[i](p, end, newblock);
 		p += abs(affected);
 		if(!affected) {
@@ -544,7 +557,7 @@ process(const char *begin, const char *end, int newblock) {
 
 int
 main(int argc, char *argv[]) {
-	char *buffer;
+	char *buffer = NULL;
 	int s, i;
 	unsigned long len, bsize;
 	FILE *source = stdin;
@@ -566,15 +579,14 @@ main(int argc, char *argv[]) {
 	if(i < argc && !(source = fopen(argv[i], "r")))
 		eprint("Cannot open file `%s`\n",argv[i]);
 	bsize = 2 * BUFSIZ;
-	if(!(buffer = malloc(bsize)))
-		eprint("Malloc failed.");
+	buffer = ereallocz(buffer, bsize);
 	len = 0;
 	while((s = fread(buffer + len, 1, BUFSIZ, source))) {
 		len += s;
 		if(BUFSIZ + len + 1 > bsize) {
 			bsize += BUFSIZ;
 			if(!(buffer = realloc(buffer, bsize)))
-				eprint("Malloc failed.");
+				eprint("realloc failed.");
 		}
 	}
 	buffer[len] = '\0';
