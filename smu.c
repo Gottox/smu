@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #define LENGTH(x)  sizeof(x)/sizeof(x[0])
-#define ADDC(b,i)  if(i % BUFSIZ == 0) { b = realloc(b, (i + BUFSIZ) * sizeof(b)); if(!b) eprint("Malloc failed."); } b[i]
+#define ADDC(b,i)  if(i % BUFSIZ == 0) { b = realloc(b, (i + BUFSIZ) * sizeof(char)); if(!b) eprint("Malloc failed."); } b[i]
 
 typedef int (*Parser)(const char *, const char *, int);
 typedef struct {
@@ -163,9 +163,9 @@ dohtml(const char *begin, const char *end, int newblock) {
 	p++;
 	tag = p;
 	for(; isalnum(*p) && p < end; p++);
+	tagend = p;
 	if(p > end || tag == tagend)
 		return 0;
-	tagend = p;
 	while((p = strstr(p, "</")) && p < end) {
 		p += 2;
 		if(strncmp(p, tag, tagend - tag) == 0 && p[tagend - tag] == '>') {
