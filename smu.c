@@ -449,10 +449,12 @@ dosurround(const char *begin, const char *end, int newblock) {
 		start = begin + l;
 		p = start - 1;
 		do {
+			stop = p;
 			p = strstr(p + 1, surround[i].search);
 		} while(p && p[-1] == '\\');
-		if(!p || p >= end ||
-				!(stop = strstr(start, surround[i].search)) || stop >= end)
+		if (p && p[-1] != '\\')
+			stop = p;
+		if(!stop || stop < start || stop >= end)
 			continue;
 		fputs(surround[i].before, stdout);
 		if(surround[i].process)
