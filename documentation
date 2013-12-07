@@ -34,7 +34,7 @@ There are several pattern you can use to highlight your text:
     	This ___is___ cool, too.
   * But this example won't work as expected:
     	***Hello** you*
-    This is a wontfix bug because it would make the source to complex.
+    This is a wontfix bug because it would make the source too complex.
     Use this instead:
     	***Hello*** *you*
 
@@ -61,7 +61,7 @@ first is underlining:
 	Topic
 	-----
 
-This very intuitive and self explaining. The resulting sourcecode looks like
+This is very intuitive and self explaining. The resulting sourcecode looks like
 this:
 
 	<h1>Heading</h1>
