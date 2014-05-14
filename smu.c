@@ -366,7 +366,7 @@ doparagraph(const char *begin, const char *end, int newblock) {
 		p = end;
 	if(p - begin <= 1)
 		return 0;
-	fputs("<p>\n", stdout);
+	fputs("<p>", stdout);
 	process(begin, p, 0);
 	fputs("</p>\n", stdout);
 	return -(p - begin);
