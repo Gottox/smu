@@ -1,5 +1,5 @@
 # smu version
-VERSION = 1.3
+VERSION = 1.4
 
 # paths
 PREFIX = /usr/local
