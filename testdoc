@@ -54,7 +54,23 @@ code:
 links
 -----
 
-[suckless](http://suckless.org)
+link: [suckless](http://suckless.org/)
+
+link with title: [suckless](http://suckless.org/ "software that sucks less")
+
+link with title (single quote): [suckless](http://suckless.org/ 'software that sucks less')
+
+
+images
+------
+
+image: ![](http://st.suckless.org/screenshots/20h-2012-s.png)
+
+image with alt text: ![alt text](http://st.suckless.org/screenshots/20h-2012-s.png)
+
+image with title: ![alt text](http://st.suckless.org/screenshots/20h-2012-s.png "screenshot of st")
+
+image with title (single quote): ![alt text](http://st.suckless.org/screenshots/20h-2012-s.png 'screenshot of st')
 
 inline html
 -----------

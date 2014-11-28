@@ -234,8 +234,9 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 
 int
 dolink(const char *begin, const char *end, int newblock) {
-	int img;
+	int img, len, sep;
 	const char *desc, *link, *p, *q, *descend, *linkend;
+	const char *title = NULL, *titleend = NULL;
 
 	if(*begin == '[')
 		img = 0;
@@ -251,24 +252,49 @@ dolink(const char *begin, const char *end, int newblock) {
 			return 0;
 	descend = p;
 	link = p + 2;
-	if(!(p = strstr(link, ")")) || p > end)
+	if(!(q = strchr(link, ')')) || q > end)
 		return 0;
-	linkend = p;
+	if((p = strpbrk(link, "\"'")) && p < end && q > p) {
+		sep = p[0]; /* separator: can be " or ' */
+		title = p + 1;
+		/* strip trailing whitespace */
+		for(linkend = p; linkend > link && isspace(*(linkend - 1)); linkend--);
+		if(!(p = strchr(title, sep)) || q > end || p > q)
+			return 0;
+		titleend = p;
+		len = p + 2 - begin;
+	}
+	else {
+		linkend = q;
+		len = q + 1 - begin;
+	}
 	if(img) {
 		fputs("<img src=\"", stdout);
 		hprint(link, linkend);
 		fputs("\" alt=\"", stdout);
 		hprint(desc, descend);
-		fputs("\" />", stdout);
+		fputs("\" ", stdout);
+		if(title && titleend) {
+			fputs("title=\"", stdout);
+			hprint(title, titleend);
+			fputs("\" ", stdout);
+		}
+		fputs("/>", stdout);
 	}
 	else {
 		fputs("<a href=\"", stdout);
 		hprint(link, linkend);
-		fputs("\">", stdout);
+		fputs("\"", stdout);
+		if(title && titleend) {
+			fputs(" title=\"", stdout);
+			hprint(title, titleend);
+			fputs("\"", stdout);
+		}
+		fputs(">", stdout);
 		process(desc, descend, 0);
 		fputs("</a>", stdout);
 	}
-	return p + 1 - begin;
+	return len;
 }
 
 int
