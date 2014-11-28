@@ -181,7 +181,6 @@ dohtml(const char *begin, const char *end, int newblock) {
 	}
 	else
 		return 0;
-
 }
 
 int
@@ -497,7 +496,7 @@ int
 dounderline(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, l;
 	const char *p;
- 
+
 	if(!newblock)
 		return 0;
 	p = begin;
@@ -556,7 +555,7 @@ process(const char *begin, const char *end, int newblock) {
 	const char *p, *q;
 	int affected;
 	unsigned int i;
-	
+
 	for(p = begin; p < end;) {
 		if(newblock)
 			while(*p == '\n')
@@ -622,4 +621,4 @@ main(int argc, char *argv[]) {
 	fclose(source);
 	free(buffer);
 	return EXIT_SUCCESS;
-} 
+}
