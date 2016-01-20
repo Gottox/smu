@@ -36,9 +36,9 @@ static void hprint(const char *begin, const char *end);                   /* esc
 static void process(const char *begin, const char *end, int isblock);     /* Processes range between begin and end. */
 
 /* list of parsers */
-static Parser parsers[] = { dounderline, dohtml, docomment, dolineprefix,
+static Parser parsers[] = { dounderline, docomment, dolineprefix,
                             dolist, doparagraph, dogtlt, dosurround, dolink,
-                            doshortlink, doamp, doreplace };
+                            doshortlink, dohtml, doamp, doreplace };
 static int nohtml = 0;
 
 static Tag lineprefix[] = {
