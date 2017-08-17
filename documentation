@@ -1,13 +1,13 @@
 smu - a Simple Markup Language
 ==============================
 
-_smu_ is a very simple and minimal markup language. It is designed for using in
+_smu_ is a very simple and minimal markup language. It is designed for use in
 wiki-like environments. smu makes it very easy to write your documents on the
 fly and convert them into HTML.
 
-smu is capable to parse very large documents. As long as you avoid an huge
-amount of indents it scales just great. (This will be fixed in future releases
-of smu)
+smu is capable of parsing very large documents. It scales just great as long
+as you avoid a huge amount of indents (yhis will be fixed in future releases
+of smu).
 
 Syntax
 ======
@@ -23,13 +23,13 @@ Inline pattern
 There are several pattern you can use to highlight your text:
 
 * Emphasis
-  * Surround your text with `*` or `_` to get *emphasis* text:
+  * Surround your text with `*` or `_` to get *emphasised* text:
     	This *is* cool.
     	This _is_ cool, too.
   * Surround your text with `**` or `__` to get **strong** text:
     	This **is** cool.
     	This __is__ cool, too.
-  * Surround your text with `***` or `___` to get ***strong and emphasis*** text:
+  * Surround your text with `***` or `___` to get ***strong and emphasised*** text:
     	This ***is*** cool.
     	This ___is___ cool, too.
   * But this example won't work as expected:
@@ -119,7 +119,7 @@ Defining ordered lists is also very easy:
 	3. Item 3
 
 It is possible to use any leading number you want. So if you don't want to keep
-your list synchron, you simple can use any number. In this case it's
+your list synchronised, you simple can use any number. In this case it's
 recommended to use `0.`, but it isn't mandatory.
 
 	0. Item 1
@@ -143,9 +143,9 @@ This will be the result in these example:
 Code & Blockquote
 -----------------
 
-Use the `> ` as a line prefix for defining blockquotes. The blockquotes are
-interpreted. This makes it possible to embed links, headings and even other
-quotes into a quote:
+Use the `> ` as a line prefix for defining blockquotes. Blockquotes are
+interpreted as well. This makes it possible to embed links, headings and even
+other quotes into a quote:
 
 	> Hello
 	> This is a quote with a [link](http://s01.de/~gottox)
@@ -186,6 +186,7 @@ Other interesting stuff
   	<hr />
   	
   	Hello2</p>
+
 * You can escape the following pattern to avoid them from being interpreted:
 
   	\ ` * _ { } [ ] ( ) # + - . !
