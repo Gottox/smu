@@ -6,7 +6,7 @@ wiki-like environments. smu makes it very easy to write your documents on the
 fly and convert them into HTML.
 
 smu is capable of parsing very large documents. It scales just great as long
-as you avoid a huge amount of indents (yhis will be fixed in future releases
+as you avoid a huge amount of indents (this will be fixed in future releases
 of smu).
 
 Syntax
