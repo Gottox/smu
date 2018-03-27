@@ -168,8 +168,7 @@ Result:
 	<pre><code>this.is(code, too)
 	</code></pre>
 
-Please note that code you can't use any HTML or smu syntax pattern in a code
-block.
+Please note that you can't use HTML or smu syntax in a code block.
 
 Other interesting stuff
 -----------------------
