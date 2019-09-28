@@ -233,7 +233,7 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 
 int
 dolink(const char *begin, const char *end, int newblock) {
-	int img, len, sep;
+	int img, len, sep, parens_depth = 1;
 	const char *desc, *link, *p, *q, *descend, *linkend;
 	const char *title = NULL, *titleend = NULL;
 
@@ -251,8 +251,20 @@ dolink(const char *begin, const char *end, int newblock) {
 			return 0;
 	descend = p;
 	link = p + 2;
-	if(!(q = strchr(link, ')')) || q > end)
-		return 0;
+
+	/* find end of link while handling nested parens */
+	q = link;
+	while(parens_depth) {
+		if(!(q = strpbrk(q, "()")) || q > end)
+			return 0;
+		if(*q == '(')
+			parens_depth++;
+		else
+			parens_depth--;
+		if(parens_depth && q < end)
+			q++;
+	}
+
 	if((p = strpbrk(link, "\"'")) && p < end && q > p) {
 		sep = p[0]; /* separator: can be " or ' */
 		title = p + 1;
@@ -261,12 +273,11 @@ dolink(const char *begin, const char *end, int newblock) {
 		if(!(p = strchr(title, sep)) || q > end || p > q)
 			return 0;
 		titleend = p;
-		len = p + 2 - begin;
 	}
 	else {
 		linkend = q;
-		len = q + 1 - begin;
 	}
+	len = q + 1 - begin;
 	if(img) {
 		fputs("<img src=\"", stdout);
 		hprint(link, linkend);
