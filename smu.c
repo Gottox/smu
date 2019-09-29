@@ -148,6 +148,7 @@ docomment(const char *begin, const char *end, int newblock) {
 	p = strstr(begin, "-->");
 	if(!p || p + 3 >= end)
 		return 0;
+	fprintf(stdout, "%.*s\n", (int)(p + 3 - begin), begin);
 	return (p + 3 - begin) * (newblock ? -1 : 1);
 }
 
