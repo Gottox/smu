@@ -219,6 +219,12 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 				p += l;
 			}
 		}
+
+		/* Skip empty lines in block */
+		while(*(buffer + j - 1) == '\n') {
+			j--;
+		}
+
 		ADDC(buffer, j) = '\0';
 		if(lineprefix[i].process)
 			process(buffer, buffer + strlen(buffer), lineprefix[i].process >= 2);
