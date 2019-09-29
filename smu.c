@@ -277,6 +277,13 @@ dolink(const char *begin, const char *end, int newblock) {
 	else {
 		linkend = q;
 	}
+
+	/* Links can be given in angular brackets */
+	if(*link == '<' && *(linkend - 1) == '>') {
+		link++;
+		linkend--;
+	}
+
 	len = q + 1 - begin;
 	if(img) {
 		fputs("<img src=\"", stdout);
