@@ -42,7 +42,7 @@ static Parser parsers[] = { dounderline, docomment, dolineprefix,
 static int nohtml = 0;
 
 static Tag lineprefix[] = {
-	{ "   ",	0,	"<pre><code>", "\n</code></pre>" },
+	{ "    ",	0,	"<pre><code>", "\n</code></pre>" },
 	{ "\t",		0,	"<pre><code>", "\n</code></pre>" },
 	{ "> ",		2,	"<blockquote>",	"</blockquote>" },
 	{ "###### ",	1,	"<h6>",		"</h6>" },
