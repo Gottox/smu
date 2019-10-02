@@ -327,6 +327,7 @@ dolist(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, indent, run, ul, isblock;
 	const char *p, *q;
 	char *buffer = NULL;
+	char marker;
 
 	isblock = 0;
 	if(newblock)
@@ -336,9 +337,10 @@ dolist(const char *begin, const char *end, int newblock) {
 	else
 		return 0;
 	q = p;
-	if(*p == '-' || *p == '*' || *p == '+')
+	if(*p == '-' || *p == '*' || *p == '+') {
 		ul = 1;
-	else {
+		marker = *p;
+	} else {
 		ul = 0;
 		for(; p < end && *p >= '0' && *p <= '9'; p++);
 		if(p >= end || *p != '.')
@@ -368,7 +370,7 @@ dolist(const char *begin, const char *end, int newblock) {
 				}
 				q = p + 1;
 				j = 0;
-				if(ul && (*q == '-' || *q == '*' || *q == '+'))
+				if(ul && *q == marker)
 					j = 1;
 				else if(!ul) {
 					for(; q + j != end && q[j] >= '0' && q[j] <= '9' && j < indent; j++);
