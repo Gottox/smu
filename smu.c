@@ -207,7 +207,7 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 		fputs(lineprefix[i].before, stdout);
 		if(lineprefix[i].search[l-1] == '\n') {
 			fputc('\n', stdout);
-			return l;
+			return l - 1;
 		}
 		if(!(buffer = malloc(BUFSIZ)))
 			eprint("Malloc failed.");
