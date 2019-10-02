@@ -391,6 +391,8 @@ dolist(const char *begin, const char *end, int newblock) {
 					else
 						break;
 				}
+				else if (j < indent)
+					run = 0;
 			}
 			ADDC(buffer, i) = *p;
 		}
