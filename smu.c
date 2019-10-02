@@ -44,7 +44,7 @@ static int nohtml = 0;
 static Tag lineprefix[] = {
 	{ "    ",	0,	"<pre><code>", "\n</code></pre>" },
 	{ "\t",		0,	"<pre><code>", "\n</code></pre>" },
-	{ "> ",		2,	"<blockquote>",	"</blockquote>" },
+	{ ">",		2,	"<blockquote>",	"</blockquote>" },
 	{ "###### ",	1,	"<h6>",		"</h6>" },
 	{ "##### ",	1,	"<h5>",		"</h5>" },
 	{ "#### ",	1,	"<h4>",		"</h4>" },
@@ -212,12 +212,22 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 		if(!(buffer = malloc(BUFSIZ)))
 			eprint("Malloc failed.");
 		buffer[0] = '\0';
-		for(j = 0, p += l; p < end; p++, j++) {
-			ADDC(buffer, j) = *p;
-			if(*p == '\n' && p + l < end) {
-				if(strncmp(lineprefix[i].search, p + 1, l) != 0)
+
+		/* Collect lines into buffer while they start with the prefix */
+		j = 0;
+		while((strncmp(lineprefix[i].search, p, l) == 0) && p + l < end) {
+			p += l;
+
+			/* Special case for blockquotes: optional space after > */
+			if(lineprefix[i].search[0] == '>' && *p == ' ') {
+				p++;
+			}
+
+			while(p < end) {
+				ADDC(buffer, j) = *p;
+				j++;
+				if(*(p++) == '\n')
 					break;
-				p += l;
 			}
 		}
 
