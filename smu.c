@@ -371,12 +371,16 @@ dolist(const char *begin, const char *end, int newblock) {
 			if(*p == '\n') {
 				if(p + 1 == end)
 					break;
-				else if(p[1] == '\n') {
-					p++;
-					ADDC(buffer, i) = '\n';
-					i++;
-					run = 0;
-					isblock++;
+				else {
+					/* Handle empty lines */
+					for(q = p + 1; (*q == ' ' || *q == '\t') && q < end; q++);
+					if(*q == '\n') {
+						ADDC(buffer, i) = '\n';
+						i++;
+						run = 0;
+						isblock++;
+						p = q;
+					}
 				}
 				q = p + 1;
 				j = 0;
