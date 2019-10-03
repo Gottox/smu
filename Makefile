@@ -52,4 +52,10 @@ uninstall:
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/smu.1
 
+test: $(patsubst %.text,%.html,$(wildcard tests/*.text tests/*/*.text)) 
+	git diff -- tests
+
+%.html: %.text smu
+	./smu $< > $@
+
 .PHONY: all options clean dist install uninstall
