@@ -334,10 +334,10 @@ dolink(const char *begin, const char *end, int newblock) {
 
 int
 dolist(const char *begin, const char *end, int newblock) {
-	unsigned int i, j, indent, run, ul, isblock;
+	unsigned int i, j, indent, run, isblock;
 	const char *p, *q;
 	char *buffer = NULL;
-	char marker;
+	char marker = '\0';  /* Bullet symbol or \0 for unordered lists */
 
 	isblock = 0;
 	if(newblock)
@@ -348,10 +348,8 @@ dolist(const char *begin, const char *end, int newblock) {
 		return 0;
 	q = p;
 	if(*p == '-' || *p == '*' || *p == '+') {
-		ul = 1;
 		marker = *p;
 	} else {
-		ul = 0;
 		for(; p < end && *p >= '0' && *p <= '9'; p++);
 		if(p >= end || *p != '.')
 			return 0;
@@ -364,7 +362,7 @@ dolist(const char *begin, const char *end, int newblock) {
 	buffer = ereallocz(buffer, BUFSIZ);
 	if(!newblock)
 		fputc('\n', stdout);
-	fputs(ul ? "<ul>\n" : "<ol>\n", stdout);
+	fputs(marker ? "<ul>\n" : "<ol>\n", stdout);
 	run = 1;
 	for(; p < end && run; p++) {
 		for(i = 0; p < end && run; p++, i++) {
@@ -384,9 +382,9 @@ dolist(const char *begin, const char *end, int newblock) {
 				}
 				q = p + 1;
 				j = 0;
-				if(ul && *q == marker)
+				if(marker && *q == marker)
 					j = 1;
-				else if(!ul) {
+				else {
 					for(; q + j != end && q[j] >= '0' && q[j] <= '9' && j < indent; j++);
 					if(q + j == end)
 						break;
@@ -417,7 +415,7 @@ dolist(const char *begin, const char *end, int newblock) {
 		process(buffer, buffer + i, isblock > 1 || (isblock == 1 && run));
 		fputs("</li>\n", stdout);
 	}
-	fputs(ul ? "</ul>\n" : "</ol>\n", stdout);
+	fputs(marker ? "</ul>\n" : "</ol>\n", stdout);
 	free(buffer);
 	p--;
 	while(*(--p) == '\n');
