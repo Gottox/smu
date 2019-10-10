@@ -20,6 +20,7 @@ more lightweight and consistent. It differs from [CommonMark](https://commonmark
 * Stricter indentation rules for lists
 * Lists don't end paragraphs by themselves (blank line needed)
 * Horizontal rules (`<hr>`) must use `- - -` as syntax
+* Code fences must not contain language info strings and have stricter syntax
 
 Patches that increase the CommonMark compatibility are welcome as long as they don't increase the code complexity significantly.
 

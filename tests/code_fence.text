@@ -1,0 +1,23 @@
+This is a code block
+
+```
+foo bar
+eggs bacon
+```
+
+TODO: Currently, language info strings will break code fences:
+
+```sh
+#!/bin/sh
+ls -la .
+```
+
+They are allowed to start within a block:
+```
+foo
+```
+
+Fences can also be written with tildes
+~~~
+foo
+~~~

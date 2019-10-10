@@ -60,6 +60,8 @@ static Tag underline[] = {
 };
 
 static Tag surround[] = {
+	{ "~~~\n",	0,	"<pre><code>",	"\n</code></pre>" },
+	{ "```\n",	0,	"<pre><code>",	"\n</code></pre>" },
 	{ "``",		0,	"<code>",	"</code>" },
 	{ "`",		0,	"<code>",	"</code>" },
 	{ "___",	1,	"<strong><em>",	"</em></strong>" },
