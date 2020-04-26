@@ -17,8 +17,7 @@ before empty line
 after empty line
 ```
 
-TODO: Currently, language info strings will break code fences:
-
+Language info strings will add a class to the code block
 ```sh
 #!/bin/sh
 ls -la .

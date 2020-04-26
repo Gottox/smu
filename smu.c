@@ -96,7 +96,7 @@ static const char *insert[][2] = {
 	{ "  \n",	"<br />" },
 };
 
-static const char *code_fence = "```\n";
+static const char *code_fence = "```";
 
 void
 eprint(const char *format, ...) {
@@ -160,7 +160,7 @@ docomment(const char *begin, const char *end, int newblock) {
 
 int
 docodefence(const char *begin, const char *end, int newblock) {
-	const char *p, *start, *stop;
+	const char *p, *start, *stop, *lang_start, *lang_stop;
 	unsigned int l = strlen(code_fence);
 
 	if(!newblock)
@@ -169,7 +169,15 @@ docodefence(const char *begin, const char *end, int newblock) {
 	if(strncmp(begin, code_fence, l) != 0)
 		return 0;
 
+	/* Find start of content and read lanuage string */
 	start = begin + l;
+	lang_start = start;
+	while (start[0] != '\n')
+		start++;
+	lang_stop = start;
+	start++;
+
+	/* Find end of fence */
 	p = start - 1;
 	do {
 		stop = p;
@@ -180,7 +188,15 @@ docodefence(const char *begin, const char *end, int newblock) {
 	if(!stop || stop < start || stop >= end) {
 		return 0;
 	}
-	fputs("<pre><code>", stdout);
+
+	/* Print output */
+	if (lang_start == lang_stop) {
+	 	fputs("<pre><code>", stdout);
+	} else {
+		fputs("<pre><code class=language-\"", stdout);
+		hprint(lang_start, lang_stop);
+		fputs("\">", stdout);
+	}
 	hprint(start, stop);
 	fputs("</code></pre>\n", stdout);
 	return -(stop - begin + l);
