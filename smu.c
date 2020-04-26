@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <regex.h>
 
 #define LENGTH(x)  sizeof(x)/sizeof(x[0])
 #define ADDC(b,i)  if(i % BUFSIZ == 0) { b = realloc(b, (i + BUFSIZ) * sizeof(char)); if(!b) eprint("Malloc failed."); } b[i]
@@ -21,6 +22,7 @@ typedef struct {
 
 static int doamp(const char *begin, const char *end, int newblock);       /* Parser for & */
 static int docomment(const char *begin, const char *end, int newblock);   /* Parser for html-comments */
+static int docodefence(const char *begin, const char *end, int newblock); /* Parser for code fences */
 static int dogtlt(const char *begin, const char *end, int newblock);      /* Parser for < and > */
 static int dohtml(const char *begin, const char *end, int newblock);      /* Parser for html */
 static int dolineprefix(const char *begin, const char *end, int newblock);/* Parser for line prefix tags */
@@ -36,10 +38,12 @@ static void hprint(const char *begin, const char *end);                   /* esc
 static void process(const char *begin, const char *end, int isblock);     /* Processes range between begin and end. */
 
 /* list of parsers */
-static Parser parsers[] = { dounderline, docomment, dolineprefix,
+static Parser parsers[] = { dounderline, docomment, docodefence, dolineprefix,
                             dolist, doparagraph, dogtlt, dosurround, dolink,
                             doshortlink, dohtml, doamp, doreplace };
 static int nohtml = 0;
+
+regex_t p_end_regex;  /* End of paragraph */
 
 static Tag lineprefix[] = {
 	{ "    ",	0,	"<pre><code>", "\n</code></pre>" },
@@ -60,8 +64,6 @@ static Tag underline[] = {
 };
 
 static Tag surround[] = {
-	{ "~~~\n",	0,	"<pre><code>",	"\n</code></pre>" },
-	{ "```\n",	0,	"<pre><code>",	"\n</code></pre>" },
 	{ "``",		0,	"<code>",	"</code>" },
 	{ "`",		0,	"<code>",	"</code>" },
 	{ "___",	1,	"<strong><em>",	"</em></strong>" },
@@ -93,6 +95,8 @@ static const char *replace[][2] = {
 static const char *insert[][2] = {
 	{ "  \n",	"<br />" },
 };
+
+static const char *code_fence = "```\n";
 
 void
 eprint(const char *format, ...) {
@@ -152,6 +156,34 @@ docomment(const char *begin, const char *end, int newblock) {
 		return 0;
 	fprintf(stdout, "%.*s\n", (int)(p + 3 - begin), begin);
 	return (p + 3 - begin) * (newblock ? -1 : 1);
+}
+
+int
+docodefence(const char *begin, const char *end, int newblock) {
+	const char *p, *start, *stop;
+	unsigned int l = strlen(code_fence);
+
+	if(!newblock)
+		return 0;
+
+	if(strncmp(begin, code_fence, l) != 0)
+		return 0;
+
+	start = begin + l;
+	p = start - 1;
+	do {
+		stop = p;
+		p = strstr(p + 1, code_fence);
+	} while(p && p[-1] == '\\');
+	if (p && p[-1] != '\\')
+		stop = p;
+	if(!stop || stop < start || stop >= end) {
+		return 0;
+	}
+	fputs("<pre><code>", stdout);
+	hprint(start, stop);
+	fputs("</code></pre>\n", stdout);
+	return -(stop - begin + l);
 }
 
 int
@@ -427,14 +459,16 @@ dolist(const char *begin, const char *end, int newblock) {
 int
 doparagraph(const char *begin, const char *end, int newblock) {
 	const char *p;
+	regmatch_t match;
 
 	if(!newblock)
 		return 0;
-	p = strstr(begin, "\n\n");
-	if(!p || p > end)
+	if(regexec(&p_end_regex, begin + 1, 1, &match, 0)) {
 		p = end;
-	if(p - begin <= 1)
-		return 0;
+	} else {
+		p = begin + 1 + match.rm_so;
+	}
+
 	fputs("<p>", stdout);
 	process(begin, p, 0);
 	fputs("</p>\n", stdout);
@@ -640,6 +674,8 @@ main(int argc, char *argv[]) {
 	int s, i;
 	unsigned long len, bsize;
 	FILE *source = stdin;
+
+	regcomp(&p_end_regex, "(\n\n|```)", REG_EXTENDED);
 
 	for(i = 1; i < argc; i++) {
 		if(!strcmp("-v", argv[i]))

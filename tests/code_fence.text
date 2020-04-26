@@ -5,19 +5,21 @@ foo bar
 eggs bacon
 ```
 
+They are allowed to start within a block:
+```
+foo
+```
+
+Code blocks can contain empty lines
+```
+before empty line
+
+after empty line
+```
+
 TODO: Currently, language info strings will break code fences:
 
 ```sh
 #!/bin/sh
 ls -la .
 ```
-
-They are allowed to start within a block:
-```
-foo
-```
-
-Fences can also be written with tildes
-~~~
-foo
-~~~
