@@ -22,3 +22,12 @@ Language info strings will add a class to the code block
 #!/bin/sh
 ls -la .
 ```
+
+Accidental code fences can be avoided by escaping
+\`\`\`
+like this.
+\`\`\`
+
+According to commonmark, a code block that is not terminated will continue until the end of file.
+```
+This is code.

@@ -163,13 +163,13 @@ docodefence(const char *begin, const char *end, int newblock) {
 	const char *p, *start, *stop, *lang_start, *lang_stop;
 	unsigned int l = strlen(code_fence);
 
-	if(!newblock)
+	if (!newblock)
 		return 0;
 
-	if(strncmp(begin, code_fence, l) != 0)
+	if (strncmp(begin, code_fence, l) != 0)
 		return 0;
 
-	/* Find start of content and read lanuage string */
+	/* Find start of content and read language string */
 	start = begin + l;
 	lang_start = start;
 	while (start[0] != '\n')
@@ -182,12 +182,13 @@ docodefence(const char *begin, const char *end, int newblock) {
 	do {
 		stop = p;
 		p = strstr(p + 1, code_fence);
-	} while(p && p[-1] == '\\');
+	} while (p && p[-1] == '\\');
 	if (p && p[-1] != '\\')
 		stop = p;
-	if(!stop || stop < start || stop >= end) {
-		return 0;
-	}
+
+	/* No closing code fence means the rest of file is code (CommonMark) */
+	if (!p)
+		stop = end;
 
 	/* Print output */
 	if (lang_start == lang_stop) {
