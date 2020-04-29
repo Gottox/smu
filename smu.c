@@ -639,7 +639,9 @@ hprint(const char *begin, const char *end) {
 	const char *p;
 
 	for(p = begin; p != end; p++) {
-		if(*p == '&')
+		if(*p == '\\' && p + 1 < end)
+			fputc(*++p, stdout);
+		else if(*p == '&')
 			fputs("&amp;", stdout);
 		else if(*p == '"')
 			fputs("&quot;", stdout);
