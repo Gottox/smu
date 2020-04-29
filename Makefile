@@ -55,6 +55,11 @@ uninstall:
 test: $(patsubst %.text,%.html,$(wildcard tests/*.text tests/*/*.text)) 
 	git diff -- tests
 
+docs: docs/index.html
+
+docs/index.html: README smu
+	./smu $< > $@
+
 %.html: %.text smu
 	./smu $< > $@
 
