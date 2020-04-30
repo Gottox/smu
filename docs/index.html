@@ -128,20 +128,14 @@ this:</p>
 2. Item 2
 3. Item 3
 </code></pre>
-<p>It is possible to use any leading number you want. So if you don't want to keep
-your list synchronised, you simple can use any number. In this case it's
-recommended to use <code>0.</code>, but it isn't mandatory.</p>
-<pre><code>0. Item 1
-0. Item 2
-0. Item 3
+<p>Only the first number in a list is meaningful. All following list items are
+continously counted. If you want a list starting at 2, you could write:</p>
+<pre><code>2. Item 1
+2. Item 2
+2. Item 3
 </code></pre>
-<p>Both examples will cause the same result. Even this is possible:</p>
-<pre><code>1000. Item 1
-432.  Item 2
-0.    Item 3
-</code></pre>
-<p>This will be the result in these example:</p>
-<pre><code>&lt;ol&gt;
+<p>and get the following HTML which will render with the numbers 2, 3, 4:</p>
+<pre><code>&lt;ol start=&quot;2&quot;&gt;
 &lt;li&gt;Item 1&lt;/li&gt;
 &lt;li&gt;Item 2&lt;/li&gt;
 &lt;li&gt;Item 3&lt;/li&gt;

@@ -139,23 +139,16 @@ Defining ordered lists is also very easy:
 	2. Item 2
 	3. Item 3
 
-It is possible to use any leading number you want. So if you don't want to keep
-your list synchronised, you simple can use any number. In this case it's
-recommended to use `0.`, but it isn't mandatory.
+Only the first number in a list is meaningful. All following list items are
+continously counted. If you want a list starting at 2, you could write:
 
-	0. Item 1
-	0. Item 2
-	0. Item 3
+	2. Item 1
+	2. Item 2
+	2. Item 3
 
-Both examples will cause the same result. Even this is possible:
+and get the following HTML which will render with the numbers 2, 3, 4:
 
-	1000. Item 1
-	432.  Item 2
-	0.    Item 3
-
-This will be the result in these example:
-
-	<ol>
+	<ol start="2">
 	<li>Item 1</li>
 	<li>Item 2</li>
 	<li>Item 3</li>
