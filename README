@@ -210,9 +210,10 @@ Other interesting stuff
   	
   	Hello2</p>
 
-* You can escape the following pattern to avoid them from being interpreted:
+* Any ASCII punctuation character may escaped by precedeing them with a
+  backslash to avoid them being interpreted:
 
-  	\ ` * _ { } [ ] ( ) # + - . !
+	!"#$%&'()*+,-./:;<=>?@[]^_`{|}~\\
 
 * To force a linebreak simple add two spaces to the end of the line:
 
