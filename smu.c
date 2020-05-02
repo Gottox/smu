@@ -39,8 +39,8 @@ static void process(const char *begin, const char *end, int isblock);     /* Pro
 
 /* list of parsers */
 static Parser parsers[] = { dounderline, docomment, docodefence, dolineprefix,
-	                    dolist, doparagraph, dogtlt, dosurround, dolink,
-	                    doshortlink, dohtml, doamp, doreplace };
+	                    dolist, doparagraph, dosurround, dolink,
+	                    doshortlink, doreplace, dohtml, dogtlt, doamp };
 static int nohtml = 0;
 
 regex_t p_end_regex;  /* End of paragraph */
