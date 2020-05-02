@@ -20,10 +20,8 @@ typedef struct {
 	char *before, *after;
 } Tag;
 
-static int doamp(const char *begin, const char *end, int newblock);       /* Parser for & */
 static int docomment(const char *begin, const char *end, int newblock);   /* Parser for html-comments */
 static int docodefence(const char *begin, const char *end, int newblock); /* Parser for code fences */
-static int dogtlt(const char *begin, const char *end, int newblock);      /* Parser for < and > */
 static int dohtml(const char *begin, const char *end, int newblock);      /* Parser for html */
 static int dolineprefix(const char *begin, const char *end, int newblock);/* Parser for line prefix tags */
 static int dolink(const char *begin, const char *end, int newblock);      /* Parser for links and images */
@@ -40,7 +38,7 @@ static void process(const char *begin, const char *end, int isblock);     /* Pro
 /* list of parsers */
 static Parser parsers[] = { dounderline, docomment, docodefence, dolineprefix,
 	                    dolist, doparagraph, dosurround, dolink,
-	                    doshortlink, doreplace, dohtml, dogtlt, doamp };
+	                    doshortlink, dohtml, doreplace };
 static int nohtml = 0;
 
 regex_t p_end_regex;  /* End of paragraph */
@@ -75,6 +73,7 @@ static Tag surround[] = {
 };
 
 static const char *replace[][2] = {
+	/* Backslash escapes */
 	{ "\\\\",       "\\" },
 	{ "\\`",        "`" },
 	{ "\\*",        "*" },
@@ -109,6 +108,11 @@ static const char *replace[][2] = {
 	{ "\\^",        "^" },
 	{ "\\|",        "|" },
 	{ "\\~",        "~" },
+	/* HTML syntax symbals that need to be turned into entities */
+	{ "<",          "&lt;" },
+	{ ">",          "&gt;" },
+	{ "&amp;",      "&amp;" },  /* Avoid replacing the & in &amp; */
+	{ "&",          "&amp;" },
 };
 
 static const char *insert[][2] = {
@@ -125,43 +129,6 @@ eprint(const char *format, ...) {
 	vfprintf(stderr, format, ap);
 	va_end(ap);
 	exit(EXIT_FAILURE);
-}
-
-int
-doamp(const char *begin, const char *end, int newblock) {
-	const char *p;
-
-	if (*begin != '&')
-		return 0;
-	if (!nohtml) {
-		for (p = begin + 1; p != end && !strchr("; \\\n\t", *p); p++);
-		if (p == end || *p == ';')
-			return 0;
-	}
-	fputs("&amp;", stdout);
-	return 1;
-}
-
-int
-dogtlt(const char *begin, const char *end, int newblock) {
-	int brpos;
-	char c;
-
-	if (nohtml || begin + 1 >= end)
-		return 0;
-	brpos = begin[1] == '>';
-	if (!brpos && *begin != '<')
-		return 0;
-	c = begin[brpos ? 0 : 1];
-	if (!brpos && (c < 'a' || c > 'z') && (c < 'A' || c > 'Z')) {
-		fputs("&lt;", stdout);
-		return 1;
-	}
-	else if (brpos && (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && !strchr("/\"'",c)) {
-		fprintf(stdout, "%c&gt;",c);
-		return 2;
-	}
-	return 0;
 }
 
 int
