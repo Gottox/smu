@@ -222,8 +222,8 @@ dohtml(const char *begin, const char *end, int newblock) {
 		p += 2;
 		if (strncmp(p, tag, tagend - tag) == 0 && p[tagend - tag] == '>') {
 			p++;
-			fwrite(begin, sizeof(char), p - begin + tagend - tag + 1, stdout);
-			return p - begin + tagend - tag + 1;
+			fwrite(begin, sizeof(char), p - begin + tagend - tag, stdout);
+			return p - begin + tagend - tag;
 		}
 	}
 	p = strchr(tagend, '>');
