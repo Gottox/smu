@@ -651,7 +651,7 @@ hprint(const char *begin, const char *end) {
 
 void
 process(const char *begin, const char *end, int newblock) {
-	const char *p, *q;
+	const char *p;
 	int affected;
 	unsigned int i;
 
@@ -660,17 +660,20 @@ process(const char *begin, const char *end, int newblock) {
 			while (*p == '\n')
 				if (++p == end)
 					return;
-		affected = 0;
-		for (i = 0; i < LENGTH(parsers) && !affected; i++)
-			affected = parsers[i](p, end, newblock);
-		p += abs(affected);
-		if (!affected) {
+
+		for (i = 0; i < LENGTH(parsers); i++)
+			if ((affected = parsers[i](p, end, newblock)))
+				break;
+		if (affected)
+			p += abs(affected);
+		else
 			fputc(*p++, stdout);
-		}
-		for (q = p; q != end && *q == '\n'; q++);
-		if (q == end)
+
+		/* Don't print single newline at end */
+		if (p + 1 == end && *p == '\n')
 			return;
-		else if (p[0] == '\n' && p + 1 != end && p[1] == '\n')
+
+		if (p[0] == '\n' && p + 1 != end && p[1] == '\n')
 			newblock = 1;
 		else
 			newblock = affected < 0;
