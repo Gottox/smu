@@ -665,11 +665,7 @@ process(const char *begin, const char *end, int newblock) {
 			affected = parsers[i](p, end, newblock);
 		p += abs(affected);
 		if (!affected) {
-			if (nohtml)
-				hprint(p, p + 1);
-			else
-				fputc(*p, stdout);
-			p++;
+			fputc(*p++, stdout);
 		}
 		for (q = p; q != end && *q == '\n'; q++);
 		if (q == end)
