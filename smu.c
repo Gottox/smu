@@ -62,6 +62,7 @@ static Tag underline[] = {
 };
 
 static Tag surround[] = {
+	{ "```",        0,      "<code>",       "</code>" },
 	{ "``",         0,      "<code>",       "</code>" },
 	{ "`",          0,      "<code>",       "</code>" },
 	{ "___",        1,      "<strong><em>", "</em></strong>" },
@@ -635,9 +636,7 @@ hprint(const char *begin, const char *end) {
 	const char *p;
 
 	for (p = begin; p != end; p++) {
-		if (*p == '\\' && p + 1 < end && p[1] == '`')
-			fputc(*++p, stdout);
-		else if (*p == '&')
+		if (*p == '&')
 			fputs("&amp;", stdout);
 		else if (*p == '"')
 			fputs("&quot;", stdout);
@@ -689,7 +688,7 @@ main(int argc, char *argv[]) {
 	unsigned long len, bsize;
 	FILE *source = stdin;
 
-	regcomp(&p_end_regex, "(\n\n|```)", REG_EXTENDED);
+	regcomp(&p_end_regex, "(\n\n|(^|\n)```)", REG_EXTENDED);
 
 	for (i = 1; i < argc; i++) {
 		if (!strcmp("-v", argv[i]))

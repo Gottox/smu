@@ -61,13 +61,13 @@ There are several patterns you can use to highlight your text:
 
 * inline Code
 
-  You can produce inline code with surrounding `\`` or `\`\``
+  You can produce inline code with surrounding `` ` `` or ``` `` ```
 
   	Use `rm -rf /` if you're a N00b.
 
   	Use ``rm -rf /`` if you're a N00b.
 
-  `\`\`ABC\`\`` makes it possible to use Backticks without backslashing them.
+  Using ``` ``ABC`` ``` makes it possible to use Backticks without backslashing them.
 
 
 Titles

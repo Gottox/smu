@@ -7,7 +7,7 @@ simple tests
 first paragraph.
 testing surround: _emph_ then **strong** and `code`.
 
-`\`escaped backticks\``.
+`` `escaped backticks` ``.
 
 `x = *y * 6;`
 
