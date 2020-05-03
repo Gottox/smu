@@ -36,6 +36,8 @@ original smu are:
   * Improved spec compliance for lists
   * Nesting code block in blockquotes works
   * "Empty" lines in lists behave identically, no matter how much whitespace they contain
+  * No backslash escapes in code blocks
+  * Use first number as start number for ordered lists
 * Added a simple test suite to check for compliance and avoid regressions
 
 Inline patterns
