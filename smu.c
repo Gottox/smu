@@ -114,10 +114,8 @@ static const char *replace[][2] = {
 	{ ">",          "&gt;" },
 	{ "&amp;",      "&amp;" },  /* Avoid replacing the & in &amp; */
 	{ "&",          "&amp;" },
-};
-
-static const char *insert[][2] = {
-	{ "  \n",       "<br />" },
+	/* Preserve newlines with two spaces before linebreak */
+	{ "  \n",       "<br />\n" },
 };
 
 static const char *code_fence = "```";
@@ -492,9 +490,6 @@ int
 doreplace(const char *begin, const char *end, int newblock) {
 	unsigned int i, l;
 
-	for (i = 0; i < LENGTH(insert); i++)
-		if (strncmp(insert[i][0], begin, strlen(insert[i][0])) == 0)
-			fputs(insert[i][1], stdout);
 	for (i = 0; i < LENGTH(replace); i++) {
 		l = strlen(replace[i][0]);
 		if (end - begin < l)
