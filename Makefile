@@ -61,6 +61,9 @@ docs: docs/index.html
 docs/index.html: README smu
 	./smu $< > $@
 
+tests/nohtml/%.html: tests/nohtml/%.text smu
+	${VALGRIND} ./smu -n $< > $@
+
 %.html: %.text smu
 	${VALGRIND} ./smu $< > $@
 
