@@ -562,7 +562,7 @@ dosurround(const char *begin, const char *end, int newblock) {
 		if (end - begin < 2*l || strncmp(begin, surround[i].search, l) != 0)
 			continue;
 		start = begin + l;
-		p = start - 1;
+		p = start;
 		do {
 			stop = p;
 			p = strstr(p + 1, surround[i].search);
@@ -574,7 +574,7 @@ dosurround(const char *begin, const char *end, int newblock) {
 		fputs(surround[i].before, stdout);
 
 		/* Single space at start and end are ignored */
-		if (*start == ' ' && *(stop - 1) == ' ') {
+		if (start[0] == ' ' && stop[-1] == ' ' && start < stop - 1) {
 			start++;
 			stop--;
 			l++;
@@ -585,7 +585,7 @@ dosurround(const char *begin, const char *end, int newblock) {
 		else
 			hprint(start, stop);
 		fputs(surround[i].after, stdout);
-		return stop - begin + l;
+		return stop - start + 2 * l;
 	}
 	return 0;
 }
@@ -603,7 +603,7 @@ dounderline(const char *begin, const char *end, int newblock) {
 	if (l == 0)
 		return 0;
 	for (i = 0; i < LENGTH(underline); i++) {
-		for (j = 0; p + j != end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
+		for (j = 0; p + j < end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
 		if (j >= l) {
 			fputs(underline[i].before, stdout);
 			if (underline[i].process)

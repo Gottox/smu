@@ -5,6 +5,7 @@ include config.mk
 
 SRC    = smu.c
 OBJ    = ${SRC:.c=.o}
+# VALGRIND = valgrind -q --error-exitcode=1
 
 all: options smu
 
@@ -61,6 +62,7 @@ docs/index.html: README smu
 	./smu $< > $@
 
 %.html: %.text smu
-	./smu $< > $@
+	${VALGRIND} ./smu $< > $@
 
 .PHONY: all options clean dist install uninstall
+.DELETE_ON_ERROR:
