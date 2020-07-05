@@ -179,7 +179,7 @@ docodefence(const char *begin, const char *end, int newblock) {
 	if (lang_start == lang_stop) {
 		fputs("<pre><code>", stdout);
 	} else {
-		fputs("<pre><code class=language-\"", stdout);
+		fputs("<pre><code class=\"language-", stdout);
 		hprint(lang_start, lang_stop);
 		fputs("\">", stdout);
 	}
