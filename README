@@ -23,23 +23,6 @@ more lightweight and consistent. It differs from [CommonMark](https://commonmark
 
 Patches that increase the CommonMark compatibility are welcome as long as they don't increase the code complexity significantly.
 
-This project is a fork of the [original smu](https://github.com/gottox/smu) by
-[Enno Boland (gottox)](https://eboland.de). The main differences to the
-original smu are:
-
-* Support for code fences
-* Improved [CommonMark](https://commonmark.org/) compatibility. E.g.
-  * Code blocks need four spaces indentation instead of three
-  * Skip empty lines at end of code blocks
-  * Ignore single spaces around code spans
-  * Keep HTML comments in output
-  * Improved spec compliance for lists
-  * Nesting code block in blockquotes works
-  * "Empty" lines in lists behave identically, no matter how much whitespace they contain
-  * No backslash escapes in code blocks
-  * Use first number as start number for ordered lists
-* Added a simple test suite to check for compliance and avoid regressions
-
 Inline patterns
 ---------------
 
