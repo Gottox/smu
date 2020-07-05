@@ -6,21 +6,42 @@ wiki-like environments. smu makes it very easy to write your documents on the
 fly and convert them into HTML.
 
 smu is capable of parsing very large documents. It scales just great as long
-as you avoid a huge amount of indents (this will be fixed in future releases
-of smu).
+as you avoid a huge amount of indents.
 
 Syntax
 ======
 
 smu was started as a rewrite of
 [markdown](http://daringfireball.net/projects/markdown/) but became something
-more lightweight and consistent. The biggest difference between markdown and smu
-is that smu doesn't support _reference style links_
+more lightweight and consistent. It differs from [CommonMark](https://commonmark.org/) in the following ways:
 
-Inline pattern
---------------
+* No support for _reference style links_
+* Stricter indentation rules for lists
+* Lists don't end paragraphs by themselves (blank line needed)
+* Horizontal rules (`<hr>`) must use `- - -` as syntax
+* Code fences have stricter syntax
 
-There are several pattern you can use to highlight your text:
+Patches that increase the CommonMark compatibility are welcome as long as they don't increase the code complexity significantly.
+
+This project is a fork of the [original smu](https://github.com/gottox/smu) by
+[Enno Boland (gottox)](https://eboland.de). The main differences to the
+original smu are:
+
+* Support for code fences
+* Improved [CommonMark](https://commonmark.org/) compatibility. E.g.
+  * Code blocks need four spaces indentation instead of three
+  * Skip empty lines at end of code blocks
+  * Ignore single spaces around code spans
+  * Keep HTML comments in output
+  * Improved spec compliance for lists
+  * Nesting code block in blockquotes works
+  * "Empty" lines in lists behave identically, no matter how much whitespace they contain
+* Added a simple test suite to check for compliance and avoid regressions
+
+Inline patterns
+---------------
+
+There are several patterns you can use to highlight your text:
 
 * Emphasis
   * Surround your text with `*` or `_` to get *emphasised* text:
@@ -40,13 +61,13 @@ There are several pattern you can use to highlight your text:
 
 * inline Code
 
-  You can produce inline code with surrounding `\`` or `\`\``
+  You can produce inline code with surrounding `` ` `` or ``` `` ```
 
   	Use `rm -rf /` if you're a N00b.
 
   	Use ``rm -rf /`` if you're a N00b.
 
-  `\`\`ABC\`\`` makes it possible to use Backticks without backslashing them.
+  Using ``` ``ABC`` ``` makes it possible to use Backticks without backslashing them.
 
 
 Titles
@@ -157,11 +178,11 @@ Result:
 	</blockquote>
 
 
-You can define block code with a leading Tab or with __3__ leading spaces
+You can define a code block with a leading Tab or with __4__ leading spaces
 
 		this.is(code)
 	
-	   this.is(code, too)
+	    this.is(code, too)
 
 Result:
 	<pre><code>this.is(code)</code></pre>
@@ -169,6 +190,16 @@ Result:
 	</code></pre>
 
 Please note that you can't use HTML or smu syntax in a code block.
+
+Another way to write code blocks is to use code fences:
+
+	```json
+	{"some": "code"}
+	```
+
+This has two advantages:
+* The optional language identifier will be turned into a `language-` class name
+* You can keep the original indentation which helps when doing copy & paste
 
 Other interesting stuff
 -----------------------
@@ -199,3 +230,9 @@ Other interesting stuff
 
 embed HTML
 ----------
+
+You can include arbitrary HTML code in your documents. The HTML will be
+passed through to the resulting document without modification. This is a good
+way to work around features that are missing in smu. If you don't want this
+behaviour, use the `-n` flag when executing smu to stricly escape the HTML
+tags.

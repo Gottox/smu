@@ -5,6 +5,7 @@ include config.mk
 
 SRC    = smu.c
 OBJ    = ${SRC:.c=.o}
+# VALGRIND = valgrind -q --error-exitcode=1
 
 all: options smu
 
@@ -52,4 +53,19 @@ uninstall:
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/smu.1
 
+test: $(patsubst %.text,%.html,$(wildcard tests/*.text tests/*/*.text)) 
+	git diff -- tests
+
+docs: docs/index.html
+
+docs/index.html: README smu
+	./smu $< > $@
+
+tests/nohtml/%.html: tests/nohtml/%.text smu
+	${VALGRIND} ./smu -n $< > $@
+
+%.html: %.text smu
+	${VALGRIND} ./smu $< > $@
+
 .PHONY: all options clean dist install uninstall
+.DELETE_ON_ERROR:

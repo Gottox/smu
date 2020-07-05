@@ -1,0 +1,217 @@
+<h1>smu - a Simple Markup Language</h1>
+<p><em>smu</em> is a very simple and minimal markup language. It is designed for use in
+wiki-like environments. smu makes it very easy to write your documents on the
+fly and convert them into HTML.</p>
+<p>smu is capable of parsing very large documents. It scales just great as long
+as you avoid a huge amount of indents.</p>
+<h1>Syntax</h1>
+<p>smu was started as a rewrite of
+<a href="http://daringfireball.net/projects/markdown/">markdown</a> but became something
+more lightweight and consistent. It differs from <a href="https://commonmark.org/">CommonMark</a> in the following ways:</p>
+<ul>
+<li>No support for <em>reference style links</em></li>
+<li>Stricter indentation rules for lists</li>
+<li>Lists don't end paragraphs by themselves (blank line needed)</li>
+<li>Horizontal rules (<code>&lt;hr&gt;</code>) must use <code>- - -</code> as syntax</li>
+<li>Code fences have stricter syntax</li>
+</ul>
+<p>Patches that increase the CommonMark compatibility are welcome as long as they don't increase the code complexity significantly.</p>
+<p>This project is a fork of the <a href="https://github.com/gottox/smu">original smu</a> by
+<a href="https://eboland.de">Enno Boland (gottox)</a>. The main differences to the
+original smu are:</p>
+<ul>
+<li>Support for code fences</li>
+<li>Improved <a href="https://commonmark.org/">CommonMark</a> compatibility. E.g.
+<ul>
+<li>Code blocks need four spaces indentation instead of three</li>
+<li>Skip empty lines at end of code blocks</li>
+<li>Ignore single spaces around code spans</li>
+<li>Keep HTML comments in output</li>
+<li>Improved spec compliance for lists</li>
+<li>Nesting code block in blockquotes works</li>
+<li>"Empty" lines in lists behave identically, no matter how much whitespace they contain</li>
+<li>No backslash escapes in code blocks</li>
+<li>Use first number as start number for ordered lists</li>
+</ul>
+</li>
+<li>Added a simple test suite to check for compliance and avoid regressions</li>
+</ul>
+<h2>Inline patterns</h2>
+<p>There are several patterns you can use to highlight your text:</p>
+<ul>
+<li><p>Emphasis
+<ul>
+<li>Surround your text with <code>*</code> or <code>_</code> to get <em>emphasised</em> text:
+<pre><code>This *is* cool.
+This _is_ cool, too.
+</code></pre>
+</li>
+<li>Surround your text with <code>**</code> or <code>__</code> to get <strong>strong</strong> text:
+<pre><code>This **is** cool.
+This __is__ cool, too.
+</code></pre>
+</li>
+<li>Surround your text with <code>***</code> or <code>___</code> to get <strong><em>strong and emphasised</em></strong> text:
+<pre><code>This ***is*** cool.
+This ___is___ cool, too.
+</code></pre>
+</li>
+<li>But this example won't work as expected:
+<pre><code>***Hello** you*
+</code></pre>
+<p>This is a wontfix bug because it would make the source too complex.
+Use this instead:
+<pre><code>***Hello*** *you*
+</code></pre>
+</p>
+</li>
+</ul>
+</p>
+</li>
+<li><p>inline Code</p>
+<p>You can produce inline code by surrounding it with backticks.</p>
+<pre><code>Use `rm -rf /` if you're a N00b.
+Use ``rm -rf /`` if you're a N00b.
+Use ```rm -rf /``` if you're a N00b.
+</code></pre>
+<p>Double and triple backticks can be used if the code itself contains backticks.</p>
+</li>
+</ul>
+<h2>Titles</h2>
+<p>Creating titles in smu is very easy. There are two different syntax styles. The
+first is underlining:</p>
+<pre><code>Heading
+=======
+
+Topic
+-----
+</code></pre>
+<p>This is very intuitive and self explaining. The resulting sourcecode looks like
+this:</p>
+<pre><code>&lt;h1&gt;Heading&lt;/h1&gt;
+&lt;h2&gt;Topic&lt;/h2&gt;
+</code></pre>
+<p>Use the following prefixes if you don't like underlining:</p>
+<pre><code># h1
+## h2
+### h3
+#### h4
+##### h5
+###### h6
+</code></pre>
+<h2>Links</h2>
+<p>The simplest way to define a link is with simple <code>&lt;&gt;</code>.</p>
+<pre><code>&lt;http://s01.de&gt;
+</code></pre>
+<p>You can do the same for E-Mail addresses:</p>
+<pre><code>&lt;yourname@s01.de&gt;
+</code></pre>
+<p>If you want to define a label for the url, you have to use a different syntax</p>
+<pre><code>[smu - simple mark up](http://s01.de/~gottox/index.cgi/proj_smu)
+</code></pre>
+<p>The resulting HTML-Code</p>
+<pre><code>&lt;a href=&quot;http://s01.de/~gottox/index.cgi/proj_smu&quot;&gt;smu - simple mark up&lt;/a&gt;&lt;/p&gt;
+</code></pre>
+<h2>Lists</h2>
+<p>Defining lists is very straightforward:</p>
+<pre><code>* Item 1
+* Item 2
+* Item 3
+</code></pre>
+<p>Result:</p>
+<pre><code>&lt;ul&gt;
+&lt;li&gt;Item 1&lt;/li&gt;
+&lt;li&gt;Item 2&lt;/li&gt;
+&lt;li&gt;Item 3&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>Defining ordered lists is also very easy:</p>
+<pre><code>1. Item 1
+2. Item 2
+3. Item 3
+</code></pre>
+<p>Only the first number in a list is meaningful. All following list items are
+continously counted. If you want a list starting at 2, you could write:</p>
+<pre><code>2. Item 1
+2. Item 2
+2. Item 3
+</code></pre>
+<p>and get the following HTML which will render with the numbers 2, 3, 4:</p>
+<pre><code>&lt;ol start=&quot;2&quot;&gt;
+&lt;li&gt;Item 1&lt;/li&gt;
+&lt;li&gt;Item 2&lt;/li&gt;
+&lt;li&gt;Item 3&lt;/li&gt;
+&lt;/ol&gt;
+</code></pre>
+<h2>Code &amp; Blockquote</h2>
+<p>Use the <code>&gt; </code> as a line prefix for defining blockquotes. Blockquotes are
+interpreted as well. This makes it possible to embed links, headings and even
+other quotes into a quote:</p>
+<pre><code>&gt; Hello
+&gt; This is a quote with a [link](http://s01.de/~gottox)
+</code></pre>
+<p>Result:
+<pre><code>&lt;blockquote&gt;&lt;p&gt;
+Hello
+This is a quote with a &lt;a href=&quot;http://s01.de/~gottox&quot;&gt;link&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</code></pre>
+</p>
+<p>You can define a code block with a leading Tab or with <strong>4</strong> leading spaces</p>
+<pre><code>	this.is(code)
+
+    this.is(code, too)
+</code></pre>
+<p>Result:
+<pre><code>&lt;pre&gt;&lt;code&gt;this.is(code)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;this.is(code, too)
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+</p>
+<p>Please note that you can't use HTML or smu syntax in a code block.</p>
+<p>Another way to write code blocks is to use code fences:</p>
+<pre><code>```json
+{&quot;some&quot;: &quot;code&quot;}
+```
+</code></pre>
+<p>This has two advantages:
+<ul>
+<li>The optional language identifier will be turned into a <code>language-</code> class name</li>
+<li>You can keep the original indentation which helps when doing copy &amp; paste</li>
+</ul>
+</p>
+<h2>Other interesting stuff</h2>
+<ul>
+<li><p>to insert a horizontal rule simple add <code>- - -</code> into an empty line:</p>
+<pre><code>Hello
+- - -
+Hello2
+</code></pre>
+<p>Result:
+<pre><code>&lt;p&gt;
+Hello
+&lt;hr /&gt;
+</code></pre>
+</p>
+<pre><code>Hello2&lt;/p&gt;
+</code></pre>
+</li>
+<li><p>Any ASCII punctuation character may escaped by precedeing them with a
+backslash to avoid them being interpreted:</p>
+<pre><code>!&quot;#$%&amp;'()*+,-./:;&lt;=&gt;?@[]^_`{|}~\
+</code></pre>
+</li>
+<li><p>To force a linebreak simple add two spaces to the end of the line:</p>
+<pre><code>No linebreak
+here.
+But here is  
+one.
+</code></pre>
+</li>
+</ul>
+<h2>embed HTML</h2>
+<p>You can include arbitrary HTML code in your documents. The HTML will be
+passed through to the resulting document without modification. This is a good
+way to work around features that are missing in smu. If you don't want this
+behaviour, use the <code>-n</code> flag when executing smu to stricly escape the HTML
+tags.</p>

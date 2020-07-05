@@ -1,0 +1,7 @@
+This document contains <html> elements, but they should not be interpreted, because smu is called with `-n`.
+
+Here are <em>some</em> tags, they can also be uppercase <HTML>.
+
+<p>
+	More tags <a href="">here</a>
+<p>
