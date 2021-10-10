@@ -232,7 +232,7 @@ dolineprefix(const char *begin, const char *end, int newblock) {
 		}
 
 		/* Skip empty lines in block */
-		while(*(buffer + j - 1) == '\n') {
+		while(buffer + j - 1 >= buffer && *(buffer + j - 1) == '\n') {
 			j--;
 		}
 
@@ -557,7 +557,7 @@ dounderline(const char *begin, const char *end, int newblock) {
 	if(l == 0)
 		return 0;
 	for(i = 0; i < LENGTH(underline); i++) {
-		for(j = 0; p + j != end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
+		for(j = 0; p + j < end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
 		if(j >= l) {
 			fputs(underline[i].before, stdout);
 			if(underline[i].process)
@@ -588,7 +588,7 @@ void
 hprint(const char *begin, const char *end) {
 	const char *p;
 
-	for(p = begin; p != end; p++) {
+	for(p = begin; p < end; p++) {
 		if(*p == '&')
 			fputs("&amp;", stdout);
 		else if(*p == '"')
@@ -624,10 +624,10 @@ process(const char *begin, const char *end, int newblock) {
 				fputc(*p, stdout);
 			p++;
 		}
-		for(q = p; q != end && *q == '\n'; q++);
+		for(q = p; q < end && *q == '\n'; q++);
 		if(q == end)
 			return;
-		else if(p[0] == '\n' && p + 1 != end && p[1] == '\n')
+		else if(p < end && p[0] == '\n' && p + 1 < end && p[1] == '\n')
 			newblock = 1;
 		else
 			newblock = affected < 0;
