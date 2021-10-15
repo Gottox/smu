@@ -171,14 +171,14 @@ dohtml(const char *begin, const char *end, int newblock) {
 		p += 2;
 		if(strncmp(p, tag, tagend - tag) == 0 && p[tagend - tag] == '>') {
 			p++;
-			fwrite(begin, sizeof(char), p - begin + tagend - tag + 1, stdout);
-			return p - begin + tagend - tag + 1;
+			fwrite(begin, sizeof(char), p - begin + tagend - tag - 1, stdout);
+			return p - begin + tagend - tag - 1;
 		}
 	}
 	p = strchr(tagend, '>');
 	if(p) {
-		fwrite(begin, sizeof(char), p - begin + 2, stdout);
-		return p - begin + 2;
+		fwrite(begin, sizeof(char), p - begin + 1, stdout);
+		return p - begin + 1;
 	}
 	else
 		return 0;
@@ -282,12 +282,12 @@ dolink(const char *begin, const char *end, int newblock) {
 			q++;
 	}
 
-	if((p = strpbrk(link, "\"'")) && p < end && q > p) {
+	if((p = strpbrk(link, "\"'")) && p < end && q - 1 > p + 1) {
 		sep = p[0]; /* separator: can be " or ' */
 		title = p + 1;
 		/* strip trailing whitespace */
 		for(linkend = p; linkend > link && isspace(*(linkend - 1)); linkend--);
-		for(titleend = q - 1; titleend > link && isspace(*(titleend)); titleend--);
+		for(titleend = q - 1; titleend > title && isspace(*(titleend)); titleend--);
 		if(*titleend != sep) {
 			return 0;
 		}
@@ -528,7 +528,7 @@ dosurround(const char *begin, const char *end, int newblock) {
 		fputs(surround[i].before, stdout);
 
 		/* Single space at start and end are ignored */
-		if (*start == ' ' && *(stop - 1) == ' ') {
+		if (stop - start > 2 && *start == ' ' && *(stop - 1) == ' ') {
 			start++;
 			stop--;
 			l++;
@@ -552,12 +552,12 @@ dounderline(const char *begin, const char *end, int newblock) {
 	if(!newblock)
 		return 0;
 	p = begin;
-	for(l = 0; p + l != end && p[l] != '\n'; l++);
+	for(l = 0; p + l + 1 != end && p[l] != '\n'; l++);
 	p += l + 1;
 	if(l == 0)
 		return 0;
 	for(i = 0; i < LENGTH(underline); i++) {
-		for(j = 0; p + j < end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
+		for(j = 0; p + j != end && p[j] != '\n' && p[j] == underline[i].search[0]; j++);
 		if(j >= l) {
 			fputs(underline[i].before, stdout);
 			if(underline[i].process)
@@ -588,7 +588,7 @@ void
 hprint(const char *begin, const char *end) {
 	const char *p;
 
-	for(p = begin; p < end; p++) {
+	for(p = begin; p != end; p++) {
 		if(*p == '&')
 			fputs("&amp;", stdout);
 		else if(*p == '"')
@@ -624,10 +624,10 @@ process(const char *begin, const char *end, int newblock) {
 				fputc(*p, stdout);
 			p++;
 		}
-		for(q = p; q < end && *q == '\n'; q++);
+		for(q = p; q != end && *q == '\n'; q++);
 		if(q == end)
 			return;
-		else if(p < end && p[0] == '\n' && p + 1 < end && p[1] == '\n')
+		else if(p[0] == '\n' && p + 1 != end && p[1] == '\n')
 			newblock = 1;
 		else
 			newblock = affected < 0;
