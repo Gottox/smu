@@ -528,7 +528,7 @@ dosurround(const char *begin, const char *end, int newblock) {
 		fputs(surround[i].before, stdout);
 
 		/* Single space at start and end are ignored */
-		if (stop - start > 2 && *start == ' ' && *(stop - 1) == ' ') {
+		if (stop - start > 1 && *start == ' ' && *(stop - 1) == ' ') {
 			start++;
 			stop--;
 			l++;
