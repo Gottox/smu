@@ -32,6 +32,7 @@ static int doshortlink(const char *begin, const char *end, int newblock); /* Par
 static int dosurround(const char *begin, const char *end, int newblock);  /* Parser for surrounding tags */
 static int dounderline(const char *begin, const char *end, int newblock); /* Parser for underline tags */
 static void *ereallocz(void *p, size_t size);
+static void eprint(const char *format, ...);
 static void hprint(const char *begin, const char *end);                   /* escapes HTML and prints it to output */
 static void process(const char *begin, const char *end, int isblock);     /* Processes range between begin and end. */
 
