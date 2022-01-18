@@ -337,7 +337,7 @@ dolist(const char *begin, const char *end, int newblock) {
 	unsigned int i, j, indent, run, ul, isblock;
 	const char *p, *q;
 	char *buffer = NULL;
-	char marker;
+	char marker = 0;
 
 	isblock = 0;
 	if(newblock)
