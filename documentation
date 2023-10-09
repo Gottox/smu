@@ -93,7 +93,7 @@ If you want to define a label for the url, you have to use a different syntax
 
 The resulting HTML-Code
 
-	<a href="http://s01.de/~gottox/index.cgi/proj_smu">smu - simple mark up</a></p>
+	<p><a href="http://s01.de/~gottox/index.cgi/proj_smu">smu - simple mark up</a></p>
 
 Lists
 -----
