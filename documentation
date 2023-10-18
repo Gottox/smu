@@ -17,6 +17,12 @@ smu was started as a rewrite of
 more lightweight and consistent. The biggest difference between markdown and smu
 is that smu doesn't support _reference style links_
 
+In Markdown, you can create reference style links, which provide a way to define links separately from the content and then refer to those definitions using labels or references. 
+[Google]: http://www.google.com
+You can [search on Google][Google] 
+SMU (Super Markup) does not support this reference style link feature. In SMU, you typically create links directly in the text without defining them separately.
+You can [search on Google](http://www.google.com) 
+
 Inline pattern
 --------------
 
