@@ -157,11 +157,11 @@ Result:
 	</blockquote>
 
 
-You can define block code with a leading Tab or with __3__ leading spaces
+You can define block code with a leading Tab or with __4__ leading spaces
 
 		this.is(code)
 	
-	   this.is(code, too)
+	    this.is(code, too)
 
 Result:
 	<pre><code>this.is(code)</code></pre>
